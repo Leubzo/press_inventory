@@ -12,32 +12,36 @@
 
     <h2>Import Books from CSV</h2>
 
-        <form action="{{ route('books.import') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            <input type="file" name="csv_file" accept=".csv" required>
-            <button type="submit">Import CSV</button>
-        </form>
+    <form action="{{ route('books.import') }}" method="POST" enctype="multipart/form-data" class="mb-3">
+        @csrf
+        <div class="mb-3">
+            <input type="file" name="csv_file" accept=".csv" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Import CSV</button>
+    </form>
 
     <hr>
 
     @if (session('success'))
-        <p style="color: green;">{{ session('success') }}</p>
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
     @endif
 
-    <h2>Search Books</h2>
-
-    <form action="{{ route('books.index') }}" method="GET">
-        <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search by ISBN, Title, or Author">
-        <button type="submit">Search</button>
-        @if(!empty($search))
-            <a href="{{ route('books.index') }}">Clear</a>
-        @endif
+    <form action="{{ route('books.index') }}" method="GET" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control" placeholder="Search by ISBN, Title, or Authors/Editors">
+            <button type="submit" class="btn btn-secondary">Search</button>
+            @if(!empty($search))
+                <a href="{{ route('books.index') }}" class="btn btn-link">Clear</a>
+            @endif
+        </div>
     </form>
 
     <hr>
 
     
-    <table border="1" cellpadding="5" cellspacing="0">
+    <table class="table table-bordered table-striped table-hover">
         <thead>
         <tr>
             <th><a href="{{ route('books.index', ['sort' => 'isbn', 'direction' => $sortField == 'isbn' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">ISBN</a></th>
@@ -68,8 +72,8 @@
         </tbody>
     </table>
 
-    <div style="text-align: center;">
-    {{ $books->links() }}
+    <div class="d-flex justify-content-center">
+        {{ $books->links() }}
     </div>
 
 
