@@ -9,23 +9,25 @@ class BookController extends Controller
 {
     // Show all books
     public function index(Request $request)
-{
-    $search = $request->input('search');
-    $sortField = $request->input('sort', 'title'); // default sort by title
-    $sortDirection = $request->input('direction', 'asc'); // default ascending
+    {
+        $search = $request->input('search');
+        $sortField = $request->input('sort', 'title'); // default sort by title
+        $sortDirection = $request->input('direction', 'asc'); // default ascending
 
-    $books = Book::query();
+        $books = Book::query();
 
-    if ($search) {
-        $books = $books->where('isbn', 'like', "%{$search}%")
-                       ->orWhere('title', 'like', "%{$search}%")
-                       ->orWhere('authors_editors', 'like', "%{$search}%");
+        if ($search) {
+            $books = $books->where('isbn', 'like', "%{$search}%")
+                        ->orWhere('title', 'like', "%{$search}%")
+                        ->orWhere('authors_editors', 'like', "%{$search}%");
+        }
+
+        $books = $books->orderBy($sortField, $sortDirection)
+                   ->paginate(20) // show 20 books per page
+                   ->appends($request->except('page')); // keep filters/sort in pagination links
+
+        return view('books.index', compact('books', 'search', 'sortField', 'sortDirection'));
     }
-
-    $books = $books->orderBy($sortField, $sortDirection)->get();
-
-    return view('books.index', compact('books', 'search', 'sortField', 'sortDirection'));
-}
 
 
     // Show form to create a book

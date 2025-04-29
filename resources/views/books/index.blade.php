@@ -67,5 +67,10 @@
         </tbody>
     </table>
 
+    <div style="text-align: center;">
+    {{ $books->links() }}
+    </div>
+
+
 </body>
 </html>
