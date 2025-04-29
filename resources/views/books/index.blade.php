@@ -38,17 +38,17 @@
     
     <table border="1" cellpadding="5" cellspacing="0">
         <thead>
-            <tr>
-                <th>ISBN</th>
-                <th>Title</th>
-                <th>Authors/Editors</th>
-                <th>Year</th>
-                <th>Pages</th>
-                <th>Price (MYR)</th>
-                <th>Category</th>
-                <th>Other Category</th>
-                <th>Stock</th>
-            </tr>
+        <tr>
+            <th><a href="{{ route('books.index', ['sort' => 'isbn', 'direction' => $sortField == 'isbn' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">ISBN</a></th>
+            <th><a href="{{ route('books.index', ['sort' => 'title', 'direction' => $sortField == 'title' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Title</a></th>
+            <th><a href="{{ route('books.index', ['sort' => 'authors_editors', 'direction' => $sortField == 'authors_editors' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Authors/Editors</a></th>
+            <th><a href="{{ route('books.index', ['sort' => 'year', 'direction' => $sortField == 'year' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Year</a></th>
+            <th><a href="{{ route('books.index', ['sort' => 'pages', 'direction' => $sortField == 'pages' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Pages</a></th>
+            <th><a href="{{ route('books.index', ['sort' => 'price', 'direction' => $sortField == 'price' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Price (MYR)</a></th>
+            <th><a href="{{ route('books.index', ['sort' => 'category', 'direction' => $sortField == 'category' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Category</a></th>
+            <th>Other Category</th>
+            <th><a href="{{ route('books.index', ['sort' => 'stock', 'direction' => $sortField == 'stock' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Stock</a></th>
+        </tr>
         </thead>
         <tbody>
             @foreach ($books as $book)

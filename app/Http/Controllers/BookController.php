@@ -11,6 +11,8 @@ class BookController extends Controller
     public function index(Request $request)
 {
     $search = $request->input('search');
+    $sortField = $request->input('sort', 'title'); // default sort by title
+    $sortDirection = $request->input('direction', 'asc'); // default ascending
 
     $books = Book::query();
 
@@ -20,10 +22,11 @@ class BookController extends Controller
                        ->orWhere('authors_editors', 'like', "%{$search}%");
     }
 
-    $books = $books->get();
+    $books = $books->orderBy($sortField, $sortDirection)->get();
 
-    return view('books.index', compact('books', 'search'));
+    return view('books.index', compact('books', 'search', 'sortField', 'sortDirection'));
 }
+
 
     // Show form to create a book
     public function create()
