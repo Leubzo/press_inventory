@@ -8,11 +8,22 @@ use App\Models\Book;
 class BookController extends Controller
 {
     // Show all books
-    public function index()
-    {
-        $books = Book::all();
-        return view('books.index', compact('books'));
+    public function index(Request $request)
+{
+    $search = $request->input('search');
+
+    $books = Book::query();
+
+    if ($search) {
+        $books = $books->where('isbn', 'like', "%{$search}%")
+                       ->orWhere('title', 'like', "%{$search}%")
+                       ->orWhere('authors_editors', 'like', "%{$search}%");
     }
+
+    $books = $books->get();
+
+    return view('books.index', compact('books', 'search'));
+}
 
     // Show form to create a book
     public function create()

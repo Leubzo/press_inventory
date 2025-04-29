@@ -23,6 +23,19 @@
         <p style="color: green;">{{ session('success') }}</p>
     @endif
 
+    <h2>Search Books</h2>
+
+    <form action="{{ route('books.index') }}" method="GET">
+        <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search by ISBN, Title, or Author">
+        <button type="submit">Search</button>
+        @if(!empty($search))
+            <a href="{{ route('books.index') }}">Clear</a>
+        @endif
+    </form>
+
+    <hr>
+
+    
     <table border="1" cellpadding="5" cellspacing="0">
         <thead>
             <tr>
