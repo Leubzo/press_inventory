@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Book List</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
     <h1>Books</h1>
-
-    <a href="{{ route('books.create') }}">Add New Book</a>
 
     <h2>Import Books from CSV</h2>
 
@@ -21,6 +21,16 @@
     </form>
 
     <hr>
+    <h4 class="text-danger">When importing a clean CSV file with updated ISBNs</h4>
+
+
+    <form action="{{ route('books.reset') }}" method="POST"
+        onsubmit="return confirm('Are you sure you want to delete ALL books? This cannot be undone.');">
+        @csrf
+        <button type="submit" class="btn btn-danger mb-3">Reset Book Table</button>
+    </form>
+
+    <hr>
 
     @if (session('success'))
         <div class="alert alert-success">
@@ -28,9 +38,14 @@
         </div>
     @endif
 
+    <div class="d-flex justify-content-start mb-3">
+        <a href="{{ route('books.create') }}" class="btn btn-success">+ Add New Book</a>
+    </div>
+
     <form action="{{ route('books.index') }}" method="GET" class="mb-3">
         <div class="input-group">
-            <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control" placeholder="Search by ISBN, Title, or Authors/Editors">
+            <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control"
+                placeholder="Search by ISBN, Title, or Authors/Editors">
             <button type="submit" class="btn btn-secondary">Search</button>
             @if(!empty($search))
                 <a href="{{ route('books.index') }}" class="btn btn-link">Clear</a>
@@ -40,20 +55,36 @@
 
     <hr>
 
-    
     <table class="table table-bordered table-striped table-hover">
         <thead>
-        <tr>
-            <th><a href="{{ route('books.index', ['sort' => 'isbn', 'direction' => $sortField == 'isbn' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">ISBN</a></th>
-            <th><a href="{{ route('books.index', ['sort' => 'title', 'direction' => $sortField == 'title' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Title</a></th>
-            <th><a href="{{ route('books.index', ['sort' => 'authors_editors', 'direction' => $sortField == 'authors_editors' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Authors/Editors</a></th>
-            <th><a href="{{ route('books.index', ['sort' => 'year', 'direction' => $sortField == 'year' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Year</a></th>
-            <th><a href="{{ route('books.index', ['sort' => 'pages', 'direction' => $sortField == 'pages' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Pages</a></th>
-            <th><a href="{{ route('books.index', ['sort' => 'price', 'direction' => $sortField == 'price' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Price (MYR)</a></th>
-            <th><a href="{{ route('books.index', ['sort' => 'category', 'direction' => $sortField == 'category' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Category</a></th>
-            <th>Other Category</th>
-            <th><a href="{{ route('books.index', ['sort' => 'stock', 'direction' => $sortField == 'stock' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Stock</a></th>
-        </tr>
+            <tr>
+                <th><a
+                        href="{{ route('books.index', ['sort' => 'isbn', 'direction' => $sortField == 'isbn' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">ISBN</a>
+                </th>
+                <th><a
+                        href="{{ route('books.index', ['sort' => 'title', 'direction' => $sortField == 'title' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Title</a>
+                </th>
+                <th><a
+                        href="{{ route('books.index', ['sort' => 'authors_editors', 'direction' => $sortField == 'authors_editors' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Authors/Editors</a>
+                </th>
+                <th><a
+                        href="{{ route('books.index', ['sort' => 'year', 'direction' => $sortField == 'year' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Year</a>
+                </th>
+                <th><a
+                        href="{{ route('books.index', ['sort' => 'pages', 'direction' => $sortField == 'pages' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Pages</a>
+                </th>
+                <th><a
+                        href="{{ route('books.index', ['sort' => 'price', 'direction' => $sortField == 'price' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Price
+                        (MYR)</a></th>
+                <th><a
+                        href="{{ route('books.index', ['sort' => 'category', 'direction' => $sortField == 'category' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Category</a>
+                </th>
+                <th>Other Category</th>
+                <th><a
+                        href="{{ route('books.index', ['sort' => 'stock', 'direction' => $sortField == 'stock' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">Stock</a>
+                </th>
+                <th>Actions</th>
+            </tr>
         </thead>
         <tbody>
             @foreach ($books as $book)
@@ -67,6 +98,16 @@
                     <td>{{ $book->category }}</td>
                     <td>{{ $book->other_category }}</td>
                     <td>{{ $book->stock }}</td>
+                    <td class="d-flex">
+                        <a href="{{ route('books.edit', $book->id) }}" class="btn btn-warning btn-sm me-2">Edit</a>
+
+                        <form action="{{ route('books.destroy', $book->id) }}" method="POST"
+                            onsubmit="return confirm('Are you sure you want to delete this book?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
                 </tr>
             @endforeach
         </tbody>
@@ -78,4 +119,5 @@
 
 
 </body>
+
 </html>
