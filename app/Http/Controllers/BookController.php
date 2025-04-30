@@ -150,6 +150,23 @@ class BookController extends Controller
         return redirect()->route('books.index')->with('success', 'Book updated successfully.');
     }
 
+    public function updateStock(Request $request, Book $book)
+    {
+        $validated = $request->validate([
+            'stock' => 'required|integer|min:0'
+        ]);
+
+        $book->update(['stock' => $validated['stock']]);
+
+        if ($request->ajax()) {
+            return response()->json(['message' => 'Stock updated successfully']);
+        }
+
+        return redirect()->route('books.index')->with('success', 'Stock updated successfully.');
+    }
+
+
+
     // Delete a book
     public function destroy(Book $book)
     {

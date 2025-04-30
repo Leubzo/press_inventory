@@ -97,7 +97,17 @@
                     <td>{{ $book->price }}</td>
                     <td>{{ $book->category }}</td>
                     <td>{{ $book->other_category }}</td>
-                    <td>{{ $book->stock }}</td>
+                    <td>
+                        <form action="{{ route('books.updateStock', $book->id) }}" method="POST"
+                            class="inline-stock-form d-flex align-items-center" data-book-id="{{ $book->id }}">
+                            @csrf
+                            @method('PATCH')
+                            <input type="number" name="stock" value="{{ $book->stock }}" min="0" class="form-control form-control-sm"
+                                style="width: 80px;" />
+                            <button type="submit" class="btn btn-sm btn-primary ms-2">Save</button>
+                        </form>
+                    </td>
+
                     <td class="d-flex">
                         <a href="{{ route('books.edit', $book->id) }}" class="btn btn-warning btn-sm me-2">Edit</a>
 
@@ -116,6 +126,41 @@
     <div class="d-flex justify-content-center">
         {{ $books->links() }}
     </div>
+
+    <!-- jQuery (CDN) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Bootstrap Toast or Simple Alert -->
+    <script>
+        $(document).ready(function () {
+            $('.inline-stock-form').on('submit', function (e) {
+                e.preventDefault();
+
+                const $form = $(this);
+                const $button = $form.find('button');
+                const bookId = $form.data('book-id');
+                const formData = $form.serialize();
+
+                $button.prop('disabled', true).text('Saving...');
+
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: 'PATCH',
+                    data: formData,
+                    success: function () {
+                        alert('✅ Stock updated for book ID ' + bookId);
+                    },
+                    error: function (xhr) {
+                        alert('❌ Error updating stock: ' + xhr.responseJSON?.message);
+                    },
+                    complete: function () {
+                        $button.prop('disabled', false).text('Save');
+                    }
+                });
+            });
+        });
+    </script>
+
 
 
 </body>
