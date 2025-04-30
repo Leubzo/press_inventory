@@ -11,8 +11,8 @@ class BookController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $sortField = $request->input('sort', 'title'); // default sort by title
-        $sortDirection = $request->input('direction', 'asc'); // default ascending
+        $sortField = $request->input('sort', 'year'); // default sort by year
+        $sortDirection = $request->input('direction', 'desc'); // default descending
 
         $books = Book::query();
 
