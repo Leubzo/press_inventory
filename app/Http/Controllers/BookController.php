@@ -26,6 +26,14 @@ class BookController extends Controller
             ->paginate(20) // show 20 books per page
             ->appends($request->except('page')); // keep filters/sort in pagination links
 
+        if ($request->ajax()) {
+            return view('books.partials.book-table', [
+                'books' => $books,
+                'sortField' => $sortField,
+                'sortDirection' => $sortDirection
+            ])->render();
+        }
+
         return view('books.index', compact('books', 'search', 'sortField', 'sortDirection'));
     }
 
