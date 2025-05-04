@@ -44,14 +44,21 @@
 
     <form action="{{ route('books.index') }}" method="GET" class="mb-3">
         <div class="input-group">
-            <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control"
+            <input type="text" id="searchInput" name="search" value="{{ $search ?? '' }}" class="form-control"
                 placeholder="Search by ISBN, Title, or Authors/Editors">
             <button type="submit" class="btn btn-secondary">Search</button>
+            <button type="button" class="btn btn-outline-primary" id="startScanner">Scan Barcode</button>
             @if(!empty($search))
                 <a href="{{ route('books.index') }}" class="btn btn-link">Clear</a>
             @endif
         </div>
     </form>
+
+    <!-- Hidden scanner box -->
+    <div id="scanner-container" style="width: 100%; display: none; margin-top: 10px;">
+        <div id="reader" style="width: 100%;"></div>
+        <button class="btn btn-danger mt-2" id="closeScanner">Close Scanner</button>
+    </div>
 
     <hr>
 
@@ -65,7 +72,9 @@
 
     <!-- jQuery (CDN) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+    <!-- HTML5-QRCode (CDN) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <!-- Bootstrap Toast or Simple Alert -->
     <script>
         $(document).ready(function () {
@@ -96,15 +105,17 @@
             });
         });
     </script>
-    
+
     <script>
+        console.log("Search URL: {{ route('books.index', [], true) }}");
         $(document).ready(function () {
             $('input[name="search"]').on('keyup', function () {
                 let query = $(this).val();
                 $.ajax({
-                    url: "{{ route('books.index') }}",
+                    url: "{{ route('books.index', [], true) }}",
                     type: "GET",
                     data: { search: query },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     success: function (data) {
                         $('#book-table').html(data);
                     },
@@ -116,7 +127,58 @@
         });
     </script>
 
+    <script>
+        const scannerContainer = document.getElementById('scanner-container');
+        const startScannerBtn = document.getElementById('startScanner');
+        const closeScannerBtn = document.getElementById('closeScanner');
+        const searchInput = document.getElementById('searchInput');
 
+        let html5QrcodeScanner;
+
+        startScannerBtn.addEventListener('click', () => {
+            scannerContainer.style.display = 'block';
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = {
+                fps: 10,
+                qrbox: function (viewfinderWidth, viewfinderHeight) {
+                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                    return { width: minEdge * 0.8, height: minEdge * 0.8 }; // 80% of the smaller dimension
+                }
+            };
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText, decodedResult) => {
+                    console.log(`Code scanned: ${decodedText}`);
+                    // Insert scanned code into the search field
+                    searchInput.value = decodedText;
+                    // Optional: auto-submit the search form if you have one
+                    // document.getElementById('yourSearchFormId').submit();
+
+                    // Stop scanner after successful scan
+                    html5QrcodeScanner.stop().then(() => {
+                        scannerContainer.style.display = 'none';
+                    });
+                },
+                (errorMessage) => {
+                    // console.log(`Scan error: ${errorMessage}`);
+                }
+            ).catch((err) => {
+                console.error(`Unable to start scanning: ${err}`);
+            });
+        });
+
+        closeScannerBtn.addEventListener('click', () => {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    scannerContainer.style.display = 'none';
+                }).catch((err) => {
+                    console.error(`Error stopping scanner: ${err}`);
+                });
+            }
+        });
+    </script>
 
 
 </body>
