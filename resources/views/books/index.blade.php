@@ -42,7 +42,7 @@
         <a href="{{ route('books.create') }}" class="btn btn-success">+ Add New Book</a>
     </div>
 
-    <form action="{{ route('books.index') }}" method="GET" class="mb-3">
+    <form id="searchForm" action="{{ route('books.index') }}" method="GET" class="mb-3">
         <div class="input-group">
             <input type="text" id="searchInput" name="search" value="{{ $search ?? '' }}" class="form-control"
                 placeholder="Search by ISBN, Title, or Authors/Editors">
@@ -154,7 +154,7 @@
                     // Insert scanned code into the search field
                     searchInput.value = decodedText;
                     // Optional: auto-submit the search form if you have one
-                    // document.getElementById('yourSearchFormId').submit();
+                    document.getElementById('searchForm').submit();
 
                     // Stop scanner after successful scan
                     html5QrcodeScanner.stop().then(() => {
