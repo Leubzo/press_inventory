@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Book;
+use Illuminate\Support\Facades\DB;
 
 class BookController extends Controller
 {
@@ -185,7 +186,7 @@ class BookController extends Controller
 
     public function reset()
     {
-        \DB::table('books')->truncate(); // Truncates all data
+        DB::table('books')->truncate(); // Truncates all data
 
         return redirect()->route('books.index')->with('success', 'All books have been deleted. Table has been reset.');
     }
