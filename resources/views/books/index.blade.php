@@ -235,7 +235,7 @@
         <div class="container">
             <a class="navbar-brand" href="#">
                 <i class="fas fa-books me-2"></i>
-                Digital Book Inventory
+                UUM Press Book Inventory
             </a>
             <div class="navbar-nav ms-auto">
                 <div class="nav-item dropdown">
