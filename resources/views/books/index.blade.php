@@ -3,6 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Books</h1>
+        <div>
+            <span class="me-3">Welcome, {{ auth()->user()->name }}!</span>
+            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+            </form>
+        </div>
+    </div>
     <title>Book List</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -33,9 +43,9 @@
     <hr>
 
     @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
     @endif
 
     <div class="d-flex justify-content-start mb-3">
@@ -49,7 +59,7 @@
             <button type="submit" class="btn btn-secondary">Search</button>
             <button type="button" class="btn btn-outline-primary" id="startScanner">Scan Barcode</button>
             @if(!empty($search))
-                <a href="{{ route('books.index') }}" class="btn btn-link">Clear</a>
+            <a href="{{ route('books.index') }}" class="btn btn-link">Clear</a>
             @endif
         </div>
     </form>
@@ -77,8 +87,8 @@
 
     <!-- Bootstrap Toast or Simple Alert -->
     <script>
-        $(document).ready(function () {
-            $('.inline-stock-form').on('submit', function (e) {
+        $(document).ready(function() {
+            $('.inline-stock-form').on('submit', function(e) {
                 e.preventDefault();
 
                 const $form = $(this);
@@ -92,13 +102,13 @@
                     url: $form.attr('action'),
                     type: 'PATCH',
                     data: formData,
-                    success: function () {
+                    success: function() {
                         alert('✅ Stock updated for book ID ' + bookId);
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         alert('❌ Error updating stock: ' + xhr.responseJSON?.message);
                     },
-                    complete: function () {
+                    complete: function() {
                         $button.prop('disabled', false).text('Save');
                     }
                 });
@@ -108,18 +118,22 @@
 
     <script>
         console.log("Search URL: {{ route('books.index', [], true) }}");
-        $(document).ready(function () {
-            $('input[name="search"]').on('keyup', function () {
+        $(document).ready(function() {
+            $('input[name="search"]').on('keyup', function() {
                 let query = $(this).val();
                 $.ajax({
                     url: "{{ route('books.index', [], true) }}",
                     type: "GET",
-                    data: { search: query },
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                    success: function (data) {
+                    data: {
+                        search: query
+                    },
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(data) {
                         $('#book-table').html(data);
                     },
-                    error: function () {
+                    error: function() {
                         alert('Live search failed.');
                     }
                 });
@@ -140,14 +154,18 @@
             html5QrcodeScanner = new Html5Qrcode("reader");
             const config = {
                 fps: 10,
-                qrbox: function (viewfinderWidth, viewfinderHeight) {
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
                     const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    return { width: minEdge * 0.8, height: minEdge * 0.8 }; // 80% of the smaller dimension
+                    return {
+                        width: minEdge * 0.8,
+                        height: minEdge * 0.8
+                    }; // 80% of the smaller dimension
                 }
             };
 
-            html5QrcodeScanner.start(
-                { facingMode: "environment" },
+            html5QrcodeScanner.start({
+                    facingMode: "environment"
+                },
                 config,
                 (decodedText, decodedResult) => {
                     console.log(`Code scanned: ${decodedText}`);
