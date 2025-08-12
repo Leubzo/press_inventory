@@ -25,6 +25,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/books/import', [BookController::class, 'import'])->name('books.import');
     Route::post('/books/reset', [BookController::class, 'reset'])->name('books.reset');
     Route::patch('/books/{book}/stock', [BookController::class, 'updateStock'])->name('books.updateStock');
+    
+    // Audit logs route
+    Route::get('/audit-logs', [App\Http\Controllers\AuditLogController::class, 'index'])->name('audit-logs.index');
 });
 
 // Authentication routes (provided by Breeze)
