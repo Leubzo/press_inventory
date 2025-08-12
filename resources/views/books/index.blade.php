@@ -1,34 +1,42 @@
+@extends('layouts.app')
+
+@section('content')
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Inventory Management</title>
+    <title>Book Inventory - UUM Press</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --danger-gradient: linear-gradient(135deg, #f77062 0%, #fe5196 100%);
         }
 
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
         }
 
         .navbar {
             background: var(--primary-gradient);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             padding: 1rem 0;
         }
 
         .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
             color: white !important;
+            font-weight: 600;
+            font-size: 1.3rem;
         }
 
         .main-container {
@@ -36,18 +44,81 @@
             margin-bottom: 2rem;
         }
 
+        /* Tab Navigation Styles */
+        .custom-tabs {
+            background: white;
+            border-radius: 10px 10px 0 0;
+            padding: 0.5rem 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        .custom-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            margin-right: 0.5rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .custom-tabs .nav-link:hover {
+            background: #f8f9fa;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .custom-tabs .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .custom-tabs .nav-link .badge {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+
         .stats-card {
             background: white;
             border-radius: 15px;
             padding: 1.5rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            border: none;
-            transition: transform 0.3s ease;
-            height: 100%;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
         }
 
         .stats-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            border-color: #667eea;
         }
 
         .stats-icon {
@@ -58,14 +129,28 @@
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            color: white;
             margin-bottom: 1rem;
         }
 
-        .stats-icon.books { background: var(--primary-gradient); }
-        .stats-icon.stock { background: var(--success-gradient); }
-        .stats-icon.categories { background: var(--warning-gradient); }
-        .stats-icon.value { background: var(--info-gradient); }
+        .stats-icon.books {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .stats-icon.stock {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .stats-icon.categories {
+            background: var(--warning-gradient);
+            color: white;
+        }
+
+        .stats-icon.value {
+            background: var(--secondary-gradient);
+            color: white;
+        }
 
         .stats-number {
             font-size: 2rem;
@@ -76,34 +161,68 @@
 
         .stats-label {
             color: #718096;
-            font-weight: 500;
+            font-size: 0.9rem;
             margin: 0;
         }
 
         .content-card {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            border: none;
-            overflow: hidden;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
         }
 
-        .card-header-custom {
+        .header-section {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .btn-custom {
+            padding: 0.6rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary.btn-custom {
             background: var(--primary-gradient);
             color: white;
-            padding: 1.5rem;
-            border: none;
         }
 
-        .card-header-custom h4 {
-            margin: 0;
-            font-weight: 600;
+        .btn-primary.btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success.btn-custom {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn-success.btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-danger.btn-custom {
+            background: var(--danger-gradient);
+            color: white;
+        }
+
+        .btn-danger.btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(247, 112, 98, 0.4);
         }
 
         .search-section {
-            background: #f7fafc;
+            background: white;
             padding: 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
         .search-input {
@@ -115,59 +234,68 @@
 
         .search-input:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .btn-custom {
-            border-radius: 8px;
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary-custom {
-            background: var(--primary-gradient);
+        .dropdown-menu {
             border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            padding: 0.5rem;
+        }
+
+        .dropdown-item {
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: var(--primary-gradient);
             color: white;
         }
 
-        .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        .pagination {
+            gap: 0.5rem;
         }
 
-        .table-custom {
-            margin: 0;
-        }
-
-        .table-custom thead th {
-            background-color: #f7fafc;
+        .page-link {
             border: none;
-            font-weight: 600;
-            color: #4a5568;
-            padding: 1rem 0.75rem;
-        }
-
-        .table-custom tbody td {
-            border: none;
-            padding: 1rem 0.75rem;
-            vertical-align: middle;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .table-custom tbody tr:hover {
-            background-color: #f8fafc;
-        }
-
-        .badge-custom {
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: #667eea;
             font-weight: 500;
         }
 
-        .stock-high { background-color: #d4edda; color: #155724; }
-        .stock-medium { background-color: #fff3cd; color: #856404; }
-        .stock-low { background-color: #f8d7da; color: #721c24; }
+        .page-link:hover {
+            background: #f3f4f6;
+            color: #667eea;
+        }
+
+        .page-item.active .page-link {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .badge {
+            padding: 0.35rem 0.65rem;
+            font-weight: 500;
+        }
+
+        .stock-high {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .stock-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .stock-low {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
 
         .action-buttons {
             display: flex;
@@ -200,20 +328,20 @@
             .stats-card {
                 margin-bottom: 1rem;
             }
-            
+
             .action-buttons {
                 flex-direction: column;
             }
-            
+
             .action-buttons .btn {
                 font-size: 0.85rem;
                 padding: 0.4rem 0.8rem;
             }
-            
+
             .table-responsive {
                 font-size: 0.9rem;
             }
-            
+
             .search-section {
                 padding: 1rem;
             }
@@ -229,6 +357,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg">
@@ -243,10 +372,12 @@
                         <i class="fas fa-user-circle me-1"></i>
                         Welcome, {{ auth()->user()->name }}
                     </a>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
                         <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
                         <li>
                             <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                                 @csrf
@@ -260,6 +391,38 @@
             </div>
         </div>
     </nav>
+
+    <!-- Tab Navigation -->
+    <div class="container mt-3">
+        <ul class="nav nav-tabs custom-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ route('books.index') }}">
+                    <i class="fas fa-book me-2"></i>Inventory
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('audit-logs.index') }}">
+                    <i class="fas fa-history me-2"></i>Audit Logs
+                    @php
+                    $recentLogsCount = \App\Models\AuditLog::where('created_at', '>=', now()->subHours(24))->count();
+                    @endphp
+                    @if($recentLogsCount > 0)
+                    <span class="badge bg-danger ms-1">{{ $recentLogsCount }} new</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="alert('Reports feature coming soon!')">
+                    <i class="fas fa-chart-bar me-2"></i>Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="alert('Settings feature coming soon!')">
+                    <i class="fas fa-cog me-2"></i>Settings
+                </a>
+            </li>
+        </ul>
+    </div>
 
     <div class="container main-container">
         <!-- Statistics Cards -->
@@ -294,49 +457,32 @@
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="stats-card">
                     <div class="stats-icon value">
-                        <i class="fas fa-dollar-sign"></i>
+                        <i class="fas fa-coins"></i>
                     </div>
-                    <h3 class="stats-number">RM {{ number_format(\App\Models\Book::sum(\DB::raw('price * stock')), 0) }}</h3>
+                    <h3 class="stats-number">RM {{ number_format(\App\Models\Book::sum(\DB::raw('price * stock')), 2) }}</h3>
                     <p class="stats-label">Total Value</p>
                 </div>
             </div>
         </div>
 
-        <!-- Success/Error Messages -->
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        <!-- Main Content -->
+        <!-- Main Content Card -->
         <div class="content-card">
-            <div class="card-header-custom">
-                <div class="d-flex justify-content-between align-items-center flex-wrap">
-                    <h4><i class="fas fa-list me-2"></i>Book Inventory</h4>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <button class="btn btn-light btn-custom" data-bs-toggle="modal" data-bs-target="#importModal">
-                            <i class="fas fa-upload me-1"></i>Import CSV
+            <!-- Header Section -->
+            <div class="header-section">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h2 class="mb-0">
+                            <i class="fas fa-books me-2"></i>Book Inventory Management
+                        </h2>
+                    </div>
+                    <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                        <button type="button" class="btn btn-success btn-custom me-2" data-bs-toggle="modal" data-bs-target="#addBookModal">
+                            <i class="fas fa-plus-circle me-1"></i>Add Book
                         </button>
-                        <a href="{{ route('books.create') }}" class="btn btn-success btn-custom">
-                            <i class="fas fa-plus me-1"></i>Add Book
-                        </a>
-                        <form action="{{ route('books.reset') }}" method="POST" style="display: inline;"
-                            onsubmit="return confirm('Are you sure you want to delete ALL books? This cannot be undone.');">
+                        <button type="button" class="btn btn-primary btn-custom me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="fas fa-file-import me-1"></i>Import
+                        </button>
+                        <form action="{{ route('books.reset') }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to reset all books? This cannot be undone.');">
                             @csrf
                             <button type="submit" class="btn btn-danger btn-custom">
                                 <i class="fas fa-trash me-1"></i>Reset
@@ -355,12 +501,12 @@
                                 <span class="input-group-text bg-white">
                                     <i class="fas fa-search text-muted"></i>
                                 </span>
-                                <input type="text" id="searchInput" name="search" value="{{ $search ?? '' }}" 
-                                       class="form-control search-input" 
-                                       placeholder="Search by ISBN, Title, or Authors/Editors">
+                                <input type="text" id="searchInput" name="search" value="{{ $search ?? '' }}"
+                                    class="form-control search-input"
+                                    placeholder="Search by ISBN, Title, or Authors/Editors">
                                 <button type="submit" class="btn btn-primary btn-custom">Search</button>
                                 @if(!empty($search))
-                                    <a href="{{ route('books.index') }}" class="btn btn-outline-secondary btn-custom">Clear</a>
+                                <a href="{{ route('books.index') }}" class="btn btn-outline-secondary btn-custom">Clear</a>
                                 @endif
                             </div>
                         </form>
@@ -398,136 +544,137 @@
     <div class="modal fade" id="importModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Books from CSV</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <form action="{{ route('books.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-upload me-2"></i>Import Books from CSV
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="csv_file" class="form-label">Choose CSV File</label>
-                            <input class="form-control" type="file" name="csv_file" id="csv_file" accept=".csv" required>
-                            <div class="form-text">Select a CSV file with book data to import.</div>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>CSV Format:</strong> ISBN, Title, Authors/Editors, Year, Pages, Price, Category, Other Category, Stock
+                            <label for="csv_file" class="form-label">Select CSV File</label>
+                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                            <small class="text-muted">CSV should contain: ISBN, Title, Authors/Editors, Year, Pages, Price, Category, Stock</small>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-custom">
-                            <i class="fas fa-upload me-1"></i>Import Books
-                        </button>
+                        <button type="submit" class="btn btn-primary">Import</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Add Book Modal -->
+    <div class="modal fade" id="addBookModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('books.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="isbn" class="form-label">ISBN *</label>
+                                <input type="text" class="form-control" id="isbn" name="isbn" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="title" class="form-label">Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="authors_editors" class="form-label">Authors/Editors *</label>
+                            <input type="text" class="form-control" id="authors_editors" name="authors_editors" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="year" class="form-label">Year</label>
+                                <input type="number" class="form-control" id="year" name="year" min="1900" max="2099">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="pages" class="form-label">Pages</label>
+                                <input type="number" class="form-control" id="pages" name="pages" min="1">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="price" class="form-label">Price (RM)</label>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <input type="text" class="form-control" id="category" name="category">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="stock" class="form-label">Stock</label>
+                                <input type="number" class="form-control" id="stock" name="stock" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Book</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
-        $(document).ready(function () {
-            // Inline stock update functionality
-            $('.inline-stock-form').on('submit', function (e) {
-                e.preventDefault();
+        // Barcode Scanner
+        let html5QrcodeScanner = null;
 
-                const $form = $(this);
-                const $button = $form.find('button');
-                const bookId = $form.data('book-id');
-                const formData = $form.serialize();
+        document.getElementById('startScanner').addEventListener('click', function() {
+            document.getElementById('scanner-container').style.display = 'block';
+            this.style.display = 'none';
 
-                $button.prop('disabled', true).text('Saving...');
-
-                $.ajax({
-                    url: $form.attr('action'),
-                    type: 'PATCH',
-                    data: formData,
-                    success: function () {
-                        alert('✅ Stock updated for book ID ' + bookId);
-                    },
-                    error: function (xhr) {
-                        alert('❌ Error updating stock: ' + xhr.responseJSON?.message);
-                    },
-                    complete: function () {
-                        $button.prop('disabled', false).text('Save');
-                    }
-                });
-            });
-
-            // Live search functionality
-            $('input[name="search"]').on('keyup', function () {
-                let query = $(this).val();
-                $.ajax({
-                    url: "{{ route('books.index', [], true) }}",
-                    type: "GET",
-                    data: { search: query },
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                    success: function (data) {
-                        $('#book-table').html(data);
-                    },
-                    error: function () {
-                        console.log('Live search failed.');
-                    }
-                });
-            });
-        });
-
-        // Barcode scanner functionality
-        const scannerContainer = document.getElementById('scanner-container');
-        const startScannerBtn = document.getElementById('startScanner');
-        const closeScannerBtn = document.getElementById('closeScanner');
-        const searchInput = document.getElementById('searchInput');
-
-        let html5QrcodeScanner;
-
-        startScannerBtn.addEventListener('click', () => {
-            scannerContainer.style.display = 'block';
             html5QrcodeScanner = new Html5Qrcode("reader");
-            const config = {
-                fps: 10,
-                qrbox: function (viewfinderWidth, viewfinderHeight) {
-                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    return { width: minEdge * 0.8, height: minEdge * 0.8 };
-                }
-            };
 
-            html5QrcodeScanner.start(
-                { facingMode: "environment" },
-                config,
+            html5QrcodeScanner.start({
+                    facingMode: "environment"
+                }, {
+                    fps: 10,
+                    qrbox: {
+                        width: 250,
+                        height: 250
+                    }
+                },
                 (decodedText, decodedResult) => {
-                    console.log(`Code scanned: ${decodedText}`);
-                    searchInput.value = decodedText;
+                    document.getElementById('searchInput').value = decodedText;
                     document.getElementById('searchForm').submit();
-
-                    html5QrcodeScanner.stop().then(() => {
-                        scannerContainer.style.display = 'none';
-                    });
+                    stopScanner();
                 },
                 (errorMessage) => {
-                    // console.log(`Scan error: ${errorMessage}`);
+                    // Handle scan error silently
                 }
             ).catch((err) => {
                 console.error(`Unable to start scanning: ${err}`);
+                alert('Unable to access camera. Please ensure you have granted camera permissions.');
+                stopScanner();
             });
         });
 
-        closeScannerBtn.addEventListener('click', () => {
+        document.getElementById('closeScanner').addEventListener('click', stopScanner);
+
+        function stopScanner() {
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
-                    scannerContainer.style.display = 'none';
+                    document.getElementById('scanner-container').style.display = 'none';
+                    document.getElementById('startScanner').style.display = 'block';
                 }).catch((err) => {
-                    console.error(`Error stopping scanner: ${err}`);
+                    console.error(`Unable to stop scanning: ${err}`);
                 });
             }
-        });
+        }
+
     </script>
 </body>
+
 </html>
+@endsection

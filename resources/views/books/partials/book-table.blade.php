@@ -1,218 +1,327 @@
+@php
+$sortField = request('sort', 'title');
+$sortDirection = request('direction', 'asc');
+@endphp
+
 <style>
-:root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    --warning-gradient: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
-    --danger-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-}
-
-.table-custom {
-    margin: 0;
-    border-collapse: separate;
-    border-spacing: 0;
-    background: white;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
-
-.table-custom thead th {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border: none;
-    font-weight: 600;
-    color: #4a5568;
-    padding: 1.25rem 1rem;
-    border-bottom: 2px solid #e2e8f0;
-    position: relative;
-}
-
-.table-custom thead th a {
-    color: #4a5568;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    display: block;
-}
-
-.table-custom thead th a:hover {
-    color: #667eea;
-    transform: translateY(-1px);
-}
-
-.table-custom tbody td {
-    border: none;
-    padding: 1.25rem 1rem;
-    vertical-align: middle;
-    border-bottom: 1px solid #f1f5f9;
-    transition: all 0.3s ease;
-}
-
-.table-custom tbody tr {
-    transition: all 0.3s ease;
-}
-
-.table-custom tbody tr:hover {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-}
-
-.table-custom tbody tr:last-child td {
-    border-bottom: none;
-}
-
-/* Column widths */
-.table-custom th:nth-child(1) { width: 12%; } /* ISBN */
-.table-custom th:nth-child(2) { width: 25%; } /* Title */
-.table-custom th:nth-child(3) { width: 22%; } /* Authors - Longer */
-.table-custom th:nth-child(4) { width: 6%; }  /* Year - Shorter */
-.table-custom th:nth-child(5) { width: 6%; }  /* Pages - Shorter */
-.table-custom th:nth-child(6) { width: 8%; }  /* Price */
-.table-custom th:nth-child(7) { width: 12%; } /* Category */
-.table-custom th:nth-child(8) { width: 12%; } /* Stock */
-.table-custom th:nth-child(9) { width: 8%; }  /* Actions */
-
-/* ISBN Badge */
-.badge {
-    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%) !important;
-    color: #4a5568 !important;
-    padding: 0.5rem 1rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Title styling */
-.fw-bold {
-    font-weight: 700 !important;
-    color: #2d3748;
-    margin-bottom: 0.25rem;
-}
-
-.text-muted {
-    color: #718096 !important;
-    font-size: 0.85rem;
-}
-
-/* Stock form styling */
-.inline-stock-form {
-    gap: 0.5rem;
-}
-
-.inline-stock-form .form-control {
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0.5rem;
-    width: 70px !important;
-    text-align: center;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.inline-stock-form .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.inline-stock-form .btn {
-    padding: 0.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: none;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.inline-stock-form .btn-primary {
-    background: var(--primary-gradient);
-}
-
-.inline-stock-form .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-/* Action buttons */
-.action-buttons {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.action-buttons .btn {
-    border-radius: 10px;
-    font-weight: 600;
-    padding: 0.5rem;
-    transition: all 0.3s ease;
-    border: none;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-buttons .btn-warning {
-    background: var(--warning-gradient);
-    color: white;
-}
-
-.action-buttons .btn-warning:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 216, 155, 0.4);
-    color: white;
-}
-
-.action-buttons .btn-danger {
-    background: var(--danger-gradient);
-    color: #721c24;
-}
-
-.action-buttons .btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 154, 158, 0.4);
-    color: #721c24;
-}
-
-/* Empty state */
-.text-center .text-muted {
-    color: #718096 !important;
-}
-
-.text-center .text-muted i {
-    color: #cbd5e0 !important;
-    margin-bottom: 1rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .table-custom thead th,
-    .table-custom tbody td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.9rem;
+    /* Modern Table Styling */
+    .table-custom {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
     }
 
+    .table-custom thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .table-custom thead th {
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border: none;
+    }
+
+    .table-custom thead th a {
+        color: white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .table-custom thead th a:hover {
+        opacity: 0.8;
+    }
+
+    .table-custom tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+    }
+
+    .table-custom tbody tr:hover {
+        background: linear-gradient(90deg, #f8f9ff 0%, #f0f4ff 100%);
+        transform: scale(1.01);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .table-custom tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: #2d3748;
+    }
+
+    /* Stock badge styling */
+    .stock-badge {
+        padding: 0.35rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .stock-high {
+        background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+        color: #0a5f3e;
+    }
+
+    .stock-medium {
+        background: linear-gradient(135deg, #ffd89b 0%, #ffb347 100%);
+        color: #7c4a00;
+    }
+
+    .stock-low {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        color: #721c24;
+    }
+
+    .stock-badge i {
+        font-size: 0.75rem;
+    }
+
+    /* Price styling */
+    .price-display {
+        font-weight: 600;
+        color: #48bb78;
+    }
+
+    /* Category badge */
+    .category-badge {
+        padding: 0.35rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        font-weight: 500;
+    }
+
+    /* ISBN styling */
+    .isbn-code {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        color: #718096;
+        background: #f7fafc;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+
+    /* Title and author styling */
+    .book-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.25rem;
+    }
+
+    .book-authors {
+        font-size: 0.9rem;
+        color: #718096;
+    }
+
+    /* Year badge */
+    .year-badge {
+        background: #f0f4f8;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        color: #4a5568;
+        font-weight: 500;
+    }
+
+    /* Inline stock form */
+    .inline-stock-form {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .inline-stock-form input {
+        width: 80px;
+        padding: 0.35rem 0.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .inline-stock-form input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .inline-stock-form button {
+        padding: 0.35rem 0.75rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .inline-stock-form button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Action buttons */
     .action-buttons {
-        flex-direction: column;
-        gap: 0.25rem;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
     }
 
     .action-buttons .btn {
-        width: 32px;
-        height: 32px;
-        padding: 0.4rem;
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.5rem;
+        transition: all 0.3s ease;
+        border: none;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    /* Reset column widths on mobile */
-    .table-custom th {
-        width: auto !important;
+    .action-buttons .btn-warning {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
     }
-}
+
+    .action-buttons .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 216, 155, 0.4);
+        color: white;
+    }
+
+    .action-buttons .btn-danger {
+        background: linear-gradient(135deg, #f77062 0%, #fe5196 100%);
+        color: white;
+    }
+
+    .action-buttons .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 154, 158, 0.4);
+        color: white;
+    }
+
+    .action-buttons .btn-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .action-buttons .btn-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+        color: white;
+    }
+
+    /* Empty state */
+    .text-center .text-muted {
+        color: #718096 !important;
+    }
+
+    .text-center .text-muted i {
+        color: #cbd5e0 !important;
+        margin-bottom: 1rem;
+    }
+
+    /* Timeline styles for modal */
+    .timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .timeline-badge {
+        position: absolute;
+        left: -25px;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+    }
+
+    .timeline-badge.created {
+        background: #28a745;
+    }
+
+    .timeline-badge.updated {
+        background: #007bff;
+    }
+
+    .timeline-badge.deleted {
+        background: #dc3545;
+    }
+
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-left: 15px;
+    }
+
+    .change-summary {
+        font-size: 0.9rem;
+        padding: 5px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .change-summary:last-child {
+        border-bottom: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+
+        .table-custom thead th,
+        .table-custom tbody td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .action-buttons .btn {
+            width: 32px;
+            height: 32px;
+            padding: 0.4rem;
+        }
+
+        /* Reset column widths on mobile */
+        .table-custom th {
+            width: auto !important;
+        }
+    }
 </style>
 
 <table class="table table-custom">
@@ -258,66 +367,154 @@
                     Stock <i class="fas fa-sort"></i>
                 </a>
             </th>
-            <th>Actions</th>
+            <th class="text-center">Actions</th>
         </tr>
     </thead>
     <tbody>
-        @forelse ($books as $book)
-            <tr>
-                <td>
-                    <span class="badge bg-light text-dark">{{ $book->isbn }}</span>
-                </td>
-                <td>
-                    <div class="fw-bold">{{ $book->title }}</div>
-                    @if($book->other_category)
-                        <small class="text-muted">{{ $book->other_category }}</small>
-                    @endif
-                </td>
-                <td>{{ $book->authors_editors }}</td>
-                <td>{{ $book->year }}</td>
-                <td>{{ $book->pages }}</td>
-                <td>RM {{ number_format($book->price, 2) }}</td>
-                <td>{{ $book->category }}</td>
-                <td>
-                    <form action="{{ route('books.updateStock', $book->id) }}" method="POST"
-                        class="inline-stock-form d-flex align-items-center" data-book-id="{{ $book->id }}">
+        @forelse($books as $book)
+        <tr>
+            <td>
+                <span class="isbn-code">{{ $book->isbn }}</span>
+            </td>
+            <td>
+                <div class="book-title">{{ $book->title }}</div>
+            </td>
+            <td>
+                <div class="book-authors">{{ Str::limit($book->authors_editors, 50) }}</div>
+            </td>
+            <td>
+                <span class="year-badge">{{ $book->year ?? 'N/A' }}</span>
+            </td>
+            <td>{{ $book->pages ?? 'N/A' }}</td>
+            <td>
+                <span class="price-display">RM {{ number_format($book->price, 2) }}</span>
+            </td>
+            <td>
+                <span class="category-badge">{{ $book->category ?? 'Uncategorized' }}</span>
+            </td>
+            <td>
+                <form action="{{ route('books.updateStock', $book) }}" method="POST" class="inline-stock-form">
+                    @csrf
+                    @method('PATCH')
+                    <input type="number" name="stock" value="{{ $book->stock }}" min="0" required>
+                    <button type="submit"><i class="fas fa-save"></i></button>
+                </form>
+                @php
+                $stockLevel = $book->stock > 20 ? 'high' : ($book->stock > 10 ? 'medium' : 'low');
+                $stockIcon = $book->stock > 20 ? 'check-circle' : ($book->stock > 10 ? 'exclamation-circle' : 'times-circle');
+                @endphp
+                <span class="stock-badge stock-{{ $stockLevel }} ms-2">
+                    <i class="fas fa-{{ $stockIcon }}"></i>
+                    {{ $book->stock }}
+                </span>
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <a href="{{ route('books.edit', $book) }}" class="btn btn-warning btn-sm" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+
+                    <button type="button" class="btn btn-info btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#auditModal{{ $book->id }}"
+                        title="View History">
+                        <i class="fas fa-history"></i>
+                    </button>
+
+                    <form action="{{ route('books.destroy', $book) }}" method="POST" style="display: inline;">
                         @csrf
-                        @method('PATCH')
-                        <input type="number" name="stock" value="{{ $book->stock }}" min="0" 
-                               class="form-control form-control-sm me-2" />
-                        <button type="submit" class="btn btn-sm btn-primary" title="Save Stock">
-                            <i class="fas fa-save"></i>
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm"
+                            onclick="return confirm('Are you sure you want to delete this book?')"
+                            title="Delete">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </form>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <a href="{{ route('books.edit', $book->id) }}" class="btn btn-warning btn-sm" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <form action="{{ route('books.destroy', $book->id) }}" method="POST" style="display: inline;"
-                            onsubmit="return confirm('Are you sure you want to delete this book?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+                </div>
+            </td>
+        </tr>
+
+        <!-- Audit History Modal for each book -->
+        <div class="modal fade" id="auditModal{{ $book->id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-history me-2"></i>Audit History: {{ Str::limit($book->title, 40) }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                </td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="9" class="text-center py-4">
-                    <div class="text-muted">
-                        <i class="fas fa-book fa-3x mb-3"></i>
-                        <p class="mb-0">No books found.</p>
-                        @if(!empty($search))
-                            <small>Try adjusting your search terms.</small>
+                    <div class="modal-body">
+                        @php
+                        $bookLogs = $book->auditLogs()->take(5)->get();
+                        @endphp
+
+                        @if($bookLogs->count() > 0)
+                        <div class="timeline">
+                            @foreach($bookLogs as $log)
+                            <div class="timeline-item">
+                                <div class="timeline-badge {{ $log->action }}">
+                                    @if($log->action == 'created')
+                                    <i class="fas fa-plus"></i>
+                                    @elseif($log->action == 'updated')
+                                    <i class="fas fa-edit"></i>
+                                    @else
+                                    <i class="fas fa-trash"></i>
+                                    @endif
+                                </div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">{{ ucfirst($log->action) }}</h6>
+                                    <small class="text-muted">
+                                        {{ $log->created_at->format('M d, Y h:i A') }}
+                                        by {{ $log->user_identifier ?? 'System' }}
+                                    </small>
+
+                                    @if($log->action == 'updated' && $log->getReadableChanges())
+                                    <div class="mt-2">
+                                        @foreach($log->getReadableChanges() as $change)
+                                        <div class="change-summary">
+                                            <strong>{{ $change['field'] }}:</strong>
+                                            <span class="text-danger">{{ $change['old'] }}</span>
+                                            →
+                                            <span class="text-success">{{ $change['new'] }}</span>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="{{ route('audit-logs.index', ['book_id' => $book->id]) }}" class="btn btn-primary btn-sm">
+                                View Full History
+                            </a>
+                        </div>
+                        @else
+                        <p class="text-muted text-center">No audit history available for this book.</p>
                         @endif
                     </div>
-                </td>
-            </tr>
+                </div>
+            </div>
+        </div>
+        @empty
+        <tr>
+            <td colspan="9" class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                <p class="text-muted">No books found. Start by adding your first book!</p>
+            </td>
+        </tr>
         @endforelse
     </tbody>
 </table>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'))
+        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
