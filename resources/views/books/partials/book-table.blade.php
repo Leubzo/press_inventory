@@ -1,6 +1,6 @@
 @php
-$sortField = request('sort', 'title');
-$sortDirection = request('direction', 'asc');
+$sortField = $sortField ?? request('sort', 'title');
+$sortDirection = $sortDirection ?? request('direction', 'asc');
 @endphp
 
 <style>
@@ -17,25 +17,33 @@ $sortDirection = request('direction', 'asc');
     }
 
     .table-custom thead th {
-        color: white;
+        color: white !important;
         font-weight: 600;
         text-transform: uppercase;
         font-size: 0.85rem;
         letter-spacing: 0.5px;
         padding: 1rem;
         border: none;
+        background: transparent;
     }
 
     .table-custom thead th a {
-        color: white;
+        color: white !important;
         text-decoration: none;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        width: 100%;
     }
 
     .table-custom thead th a:hover {
         opacity: 0.8;
+        color: #f0f0f0 !important;
+    }
+
+    .table-custom thead th a i {
+        color: white !important;
+        margin-left: 0.5rem;
     }
 
     .table-custom tbody tr {
@@ -299,7 +307,6 @@ $sortDirection = request('direction', 'asc');
 
     /* Responsive */
     @media (max-width: 768px) {
-
         .table-custom thead th,
         .table-custom tbody td {
             padding: 0.75rem 0.5rem;
@@ -380,32 +387,33 @@ $sortDirection = request('direction', 'asc');
                 <div class="book-title">{{ $book->title }}</div>
             </td>
             <td>
-                <div class="book-authors">{{ Str::limit($book->authors_editors, 50) }}</div>
+                <div class="book-authors">{{ \Illuminate\Support\Str::limit($book->authors_editors, 50) }}</div>
             </td>
             <td>
                 <span class="year-badge">{{ $book->year ?? 'N/A' }}</span>
             </td>
             <td>{{ $book->pages ?? 'N/A' }}</td>
             <td>
-                <span class="price-display">RM {{ number_format($book->price, 2) }}</span>
+                <span class="price-display">RM {{ number_format($book->price ?? 0, 2) }}</span>
             </td>
             <td>
                 <span class="category-badge">{{ $book->category ?? 'Uncategorized' }}</span>
             </td>
             <td>
-                <form action="{{ route('books.updateStock', $book) }}" method="POST" class="inline-stock-form">
+                <form action="{{ route('books.updateStock', $book) }}" method="POST" class="inline-stock-form" data-book-id="{{ $book->id }}">
                     @csrf
                     @method('PATCH')
-                    <input type="number" name="stock" value="{{ $book->stock }}" min="0" required>
+                    <input type="number" name="stock" value="{{ $book->stock ?? 0 }}" min="0" required>
                     <button type="submit"><i class="fas fa-save"></i></button>
                 </form>
                 @php
-                $stockLevel = $book->stock > 20 ? 'high' : ($book->stock > 10 ? 'medium' : 'low');
-                $stockIcon = $book->stock > 20 ? 'check-circle' : ($book->stock > 10 ? 'exclamation-circle' : 'times-circle');
+                $stockValue = $book->stock ?? 0;
+                $stockLevel = $stockValue > 20 ? 'high' : ($stockValue > 10 ? 'medium' : 'low');
+                $stockIcon = $stockValue > 20 ? 'check-circle' : ($stockValue > 10 ? 'exclamation-circle' : 'times-circle');
                 @endphp
                 <span class="stock-badge stock-{{ $stockLevel }} ms-2">
                     <i class="fas fa-{{ $stockIcon }}"></i>
-                    {{ $book->stock }}
+                    {{ $stockValue }}
                 </span>
             </td>
             <td>
@@ -440,36 +448,40 @@ $sortDirection = request('direction', 'asc');
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="fas fa-history me-2"></i>Audit History: {{ Str::limit($book->title, 40) }}
+                            <i class="fas fa-history me-2"></i>Audit History: {{ \Illuminate\Support\Str::limit($book->title, 40) }}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         @php
-                        $bookLogs = $book->auditLogs()->take(5)->get();
+                        try {
+                            $bookLogs = $book->auditLogs()->take(5)->get();
+                        } catch (\Exception $e) {
+                            $bookLogs = collect(); // Empty collection if audit logs fail
+                        }
                         @endphp
 
                         @if($bookLogs->count() > 0)
                         <div class="timeline">
                             @foreach($bookLogs as $log)
                             <div class="timeline-item">
-                                <div class="timeline-badge {{ $log->action }}">
-                                    @if($log->action == 'created')
+                                <div class="timeline-badge {{ $log->action ?? 'updated' }}">
+                                    @if(($log->action ?? 'updated') == 'created')
                                     <i class="fas fa-plus"></i>
-                                    @elseif($log->action == 'updated')
+                                    @elseif(($log->action ?? 'updated') == 'updated')
                                     <i class="fas fa-edit"></i>
                                     @else
                                     <i class="fas fa-trash"></i>
                                     @endif
                                 </div>
                                 <div class="timeline-content">
-                                    <h6 class="mb-1">{{ ucfirst($log->action) }}</h6>
+                                    <h6 class="mb-1">{{ ucfirst($log->action ?? 'Updated') }}</h6>
                                     <small class="text-muted">
                                         {{ $log->created_at->format('M d, Y h:i A') }}
                                         by {{ $log->user_identifier ?? 'System' }}
                                     </small>
 
-                                    @if($log->action == 'updated' && $log->getReadableChanges())
+                                    @if(($log->action ?? 'updated') == 'updated' && method_exists($log, 'getReadableChanges') && $log->getReadableChanges())
                                     <div class="mt-2">
                                         @foreach($log->getReadableChanges() as $change)
                                         <div class="change-summary">
@@ -508,13 +520,3 @@ $sortDirection = request('direction', 'asc');
         @endforelse
     </tbody>
 </table>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'))
-        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        });
-    });
-</script>

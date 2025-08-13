@@ -5,39 +5,86 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Book;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BookController extends Controller
 {
     // Show all books
     public function index(Request $request)
     {
-        $search = $request->input('search');
-        $sortField = $request->input('sort', 'year'); // default sort by year
-        $sortDirection = $request->input('direction', 'desc'); // default descending
+        try {
+            $search = $request->input('search');
+            $sortField = $request->input('sort', 'year'); 
+            $sortDirection = $request->input('direction', 'desc');
+            
+            // Fix empty string issue
+            if (empty($sortField) || $sortField === '') {
+                $sortField = 'year';
+            }
+            if (empty($sortDirection) || $sortDirection === '' || !in_array($sortDirection, ['asc', 'desc'])) {
+                $sortDirection = 'desc';
+            }
 
-        $books = Book::query();
+            $books = Book::query();
 
-        if ($search) {
-            $books = $books->where('isbn', 'like', "%{$search}%")
-                ->orWhere('title', 'like', "%{$search}%")
-                ->orWhere('authors_editors', 'like', "%{$search}%");
+            if ($search) {
+                $books = $books->where('isbn', 'like', "%{$search}%")
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('authors_editors', 'like', "%{$search}%");
+            }
+
+            $books = $books->orderBy($sortField, $sortDirection)
+                ->paginate(20) // show 20 books per page
+                ->appends($request->except('page')); // keep filters/sort in pagination links
+
+            // Handle AJAX requests
+            if ($request->ajax() || $request->expectsJson()) {
+                try {
+                    Log::info('AJAX request detected for books search', ['search' => $search]);
+                    
+                    $html = view('books.partials.book-table', [
+                        'books' => $books,
+                        'sortField' => $sortField,
+                        'sortDirection' => $sortDirection
+                    ])->render();
+                    
+                    Log::info('AJAX view rendered successfully');
+                    return response($html);
+                    
+                } catch (\Exception $e) {
+                    Log::error('AJAX Error in book table partial: ' . $e->getMessage(), [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    return response()->json([
+                        'error' => 'Unable to load search results', 
+                        'message' => $e->getMessage(),
+                        'line' => $e->getLine()
+                    ], 500);
+                }
+            }
+
+            return view('books.index', compact('books', 'search', 'sortField', 'sortDirection'));
+
+        } catch (\Exception $e) {
+            Log::error('Error in BookController@index: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'search' => $search ?? 'none'
+            ]);
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'error' => 'Search error occurred', 
+                    'message' => $e->getMessage(),
+                    'line' => $e->getLine()
+                ], 500);
+            }
+            
+            return back()->with('error', 'An error occurred while loading books.');
         }
-
-        $books = $books->orderBy($sortField, $sortDirection)
-            ->paginate(20) // show 20 books per page
-            ->appends($request->except('page')); // keep filters/sort in pagination links
-
-        if ($request->ajax() || $request->expectsJson()) {
-            return view('books.partials.book-table', [
-                'books' => $books,
-                'sortField' => $sortField,
-                'sortDirection' => $sortDirection
-            ])->render();
-        }
-
-        return view('books.index', compact('books', 'search', 'sortField', 'sortDirection'));
     }
-
 
     // Show form to create a book
     public function create()
@@ -73,10 +120,9 @@ class BookController extends Controller
         ]);
 
         $file = $request->file('csv_file');
-
         $handle = fopen($file, 'r');
-
         $headerSkipped = false;
+        
         while (($data = fgetcsv($handle, 1000, ',')) !== false) {
             if (!$headerSkipped) {
                 // Skip the first 3 header rows
@@ -114,7 +160,6 @@ class BookController extends Controller
                 continue;
             }
 
-
             // Create a new book
             Book::create([
                 'isbn' => $isbn,
@@ -130,7 +175,6 @@ class BookController extends Controller
         }
 
         fclose($handle);
-
         return redirect()->route('books.index')->with('success', 'Books imported successfully.');
     }
 
@@ -174,23 +218,16 @@ class BookController extends Controller
         return redirect()->route('books.index')->with('success', 'Stock updated successfully.');
     }
 
-
-
     // Delete a book
     public function destroy(Book $book)
     {
         $book->delete();
-
         return redirect()->route('books.index')->with('success', 'Book deleted successfully.');
     }
 
     public function reset()
     {
         DB::table('books')->truncate(); // Truncates all data
-
         return redirect()->route('books.index')->with('success', 'All books have been deleted. Table has been reset.');
     }
-
-
-
 }
