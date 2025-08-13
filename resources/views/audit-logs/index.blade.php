@@ -405,15 +405,109 @@
                             </div>
                         @endforeach
                     @elseif($log->action == 'created')
-                        <div class="alert alert-success mb-0">
+                        <div class="alert alert-success mb-3">
                             <i class="fas fa-sparkles me-2"></i>
                             New book was added to the inventory
                         </div>
+                        @if($log->new_values)
+                            <h6 class="mb-3">Book Details:</h6>
+                            <div class="change-item">
+                                <div class="row">
+                                    @if(isset($log->new_values['title']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Title:</strong> {{ $log->new_values['title'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->new_values['isbn']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>ISBN:</strong> {{ $log->new_values['isbn'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->new_values['authors_editors']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Authors/Editors:</strong> {{ $log->new_values['authors_editors'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->new_values['year']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Year:</strong> {{ $log->new_values['year'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->new_values['pages']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Pages:</strong> {{ $log->new_values['pages'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->new_values['price']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Price:</strong> RM {{ $log->new_values['price'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->new_values['category']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Category:</strong> {{ $log->new_values['category'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->new_values['stock']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Stock:</strong> {{ $log->new_values['stock'] }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     @elseif($log->action == 'deleted')
-                        <div class="alert alert-danger mb-0">
+                        <div class="alert alert-danger mb-3">
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             Book was removed from the inventory
                         </div>
+                        @if($log->old_values)
+                            <h6 class="mb-3">Removed Book Details:</h6>
+                            <div class="change-item">
+                                <div class="row">
+                                    @if(isset($log->old_values['title']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Title:</strong> {{ $log->old_values['title'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->old_values['isbn']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>ISBN:</strong> {{ $log->old_values['isbn'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->old_values['authors_editors']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Authors/Editors:</strong> {{ $log->old_values['authors_editors'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->old_values['year']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Year:</strong> {{ $log->old_values['year'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->old_values['pages']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Pages:</strong> {{ $log->old_values['pages'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->old_values['price']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Price:</strong> RM {{ $log->old_values['price'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->old_values['category']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Category:</strong> {{ $log->old_values['category'] }}
+                                        </div>
+                                    @endif
+                                    @if(isset($log->old_values['stock']))
+                                        <div class="col-md-6 mb-2">
+                                            <strong>Stock:</strong> {{ $log->old_values['stock'] }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     @endif
 
                     <div class="meta-info">
