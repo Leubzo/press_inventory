@@ -28,6 +28,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Audit logs route
     Route::get('/audit-logs', [App\Http\Controllers\AuditLogController::class, 'index'])->name('audit-logs.index');
+    
+    // Reports routes
+    Route::get('/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export', [App\Http\Controllers\ReportsController::class, 'export'])->name('reports.export');
 });
 
 // Authentication routes (provided by Breeze)

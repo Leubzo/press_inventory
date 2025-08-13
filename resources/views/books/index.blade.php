@@ -399,7 +399,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#" onclick="alert('Reports feature coming soon!')">
+            <a class="nav-link" href="{{ route('reports.index') }}">
                 <i class="fas fa-chart-bar me-2"></i>Reports
             </a>
         </li>
