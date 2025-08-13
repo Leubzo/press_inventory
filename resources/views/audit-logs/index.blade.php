@@ -371,7 +371,7 @@
                         </span>
                         <span class="text-muted">
                             <i class="far fa-clock me-1"></i>
-                            {{ $log->created_at->diffForHumans() }}
+                            {{ $log->created_at->setTimezone('Asia/Kuala_Lumpur')->diffForHumans() }}
                         </span>
                     </div>
 
@@ -427,7 +427,7 @@
                         </div>
                         <div class="meta-item">
                             <i class="fas fa-calendar"></i>
-                            <span>{{ $log->created_at->format('M d, Y h:i A') }}</span>
+                            <span>{{ $log->created_at->setTimezone('Asia/Kuala_Lumpur')->format('M d, Y h:i A') }} MYT</span>
                         </div>
                     </div>
                 </div>

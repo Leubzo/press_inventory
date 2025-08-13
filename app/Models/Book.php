@@ -22,6 +22,15 @@ class Book extends Model
         'other_category',
         'stock',
     ];
+
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s',
+        'price' => 'decimal:2',
+        'year' => 'integer',
+        'pages' => 'integer',
+        'stock' => 'integer',
+    ];
     
     /**
      * Boot method to register model events for audit logging
@@ -40,11 +49,16 @@ class Book extends Model
                 $changes = $book->getChanges();
                 $original = $book->getOriginal();
                 
-                // Filter out timestamp changes if you don't want to track them
+                // Filter out timestamp changes from tracking
                 unset($changes['updated_at']);
+                unset($changes['created_at']);
                 
                 if (!empty($changes)) {
-                    self::createAuditLog($book, 'updated', $original, $book->getAttributes());
+                    // Filter out timestamps from the audit data
+                    $filteredOriginal = collect($original)->except(['created_at', 'updated_at'])->toArray();
+                    $filteredNew = collect($book->getAttributes())->except(['created_at', 'updated_at'])->toArray();
+                    
+                    self::createAuditLog($book, 'updated', $filteredOriginal, $filteredNew);
                 }
             }
         });

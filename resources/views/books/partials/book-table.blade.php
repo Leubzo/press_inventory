@@ -477,7 +477,7 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
                                 <div class="timeline-content">
                                     <h6 class="mb-1">{{ ucfirst($log->action ?? 'Updated') }}</h6>
                                     <small class="text-muted">
-                                        {{ $log->created_at->format('M d, Y h:i A') }}
+                                        {{ $log->created_at->setTimezone('Asia/Kuala_Lumpur')->format('M d, Y h:i A') }} MYT
                                         by {{ $log->user_identifier ?? 'System' }}
                                     </small>
 

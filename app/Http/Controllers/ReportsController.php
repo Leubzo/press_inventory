@@ -19,8 +19,8 @@ class ReportsController extends Controller
     
     private function generateReports(Request $request)
     {
-        $dateFrom = $request->get('date_from', Carbon::now()->subDays(30)->toDateString());
-        $dateTo = $request->get('date_to', Carbon::now()->toDateString());
+        $dateFrom = $request->get('date_from', Carbon::now('Asia/Kuala_Lumpur')->subDays(30)->toDateString());
+        $dateTo = $request->get('date_to', Carbon::now('Asia/Kuala_Lumpur')->toDateString());
         $category = $request->get('category');
         
         $books = Book::query();
@@ -31,7 +31,10 @@ class ReportsController extends Controller
         
         $booksData = $books->get();
         
-        $auditLogs = AuditLog::whereBetween('created_at', [$dateFrom, $dateTo . ' 23:59:59']);
+        $auditLogs = AuditLog::whereBetween('created_at', [
+            Carbon::parse($dateFrom, 'Asia/Kuala_Lumpur')->startOfDay(),
+            Carbon::parse($dateTo, 'Asia/Kuala_Lumpur')->endOfDay()
+        ]);
         
         if ($category) {
             $auditLogs->whereHas('book', function($query) use ($category) {
@@ -97,7 +100,7 @@ class ReportsController extends Controller
     private function getActivityStats($auditLogs, $dateFrom, $dateTo)
     {
         $activityByDate = $auditLogs->groupBy(function($log) {
-            return $log->created_at->toDateString();
+            return $log->created_at->setTimezone('Asia/Kuala_Lumpur')->toDateString();
         })->map(function($dayLogs) {
             return [
                 'total' => $dayLogs->count(),
@@ -150,7 +153,7 @@ class ReportsController extends Controller
     
     private function exportCsv($reports)
     {
-        $filename = 'inventory_report_' . date('Y-m-d') . '.csv';
+        $filename = 'inventory_report_' . Carbon::now('Asia/Kuala_Lumpur')->format('Y-m-d') . '.csv';
         
         $headers = [
             'Content-Type' => 'text/csv',
@@ -161,7 +164,7 @@ class ReportsController extends Controller
             $file = fopen('php://output', 'w');
             
             fputcsv($file, ['Inventory Summary Report']);
-            fputcsv($file, ['Generated on: ' . date('Y-m-d H:i:s')]);
+            fputcsv($file, ['Generated on: ' . Carbon::now('Asia/Kuala_Lumpur')->format('Y-m-d H:i:s') . ' MYT']);
             fputcsv($file, []);
             
             fputcsv($file, ['Summary Statistics']);
