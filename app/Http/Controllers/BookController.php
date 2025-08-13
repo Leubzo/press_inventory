@@ -178,10 +178,6 @@ class BookController extends Controller
         return redirect()->route('books.index')->with('success', 'Books imported successfully.');
     }
 
-    public function edit(Book $book)
-    {
-        return view('books.edit', compact('book'));
-    }
 
     // Update the Book after editing
     public function update(Request $request, Book $book)

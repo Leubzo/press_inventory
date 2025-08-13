@@ -418,9 +418,12 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
             </td>
             <td>
                 <div class="action-buttons">
-                    <a href="{{ route('books.edit', $book) }}" class="btn btn-warning btn-sm" title="Edit">
+                    <button type="button" class="btn btn-warning btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editModal{{ $book->id }}"
+                        title="Edit">
                         <i class="fas fa-edit"></i>
-                    </a>
+                    </button>
 
                     <button type="button" class="btn btn-info btn-sm"
                         data-bs-toggle="modal"
@@ -507,6 +510,74 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
                         <p class="text-muted text-center">No audit history available for this book.</p>
                         @endif
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Book Modal for each book -->
+        <div class="modal fade" id="editModal{{ $book->id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit me-2"></i>Edit Book: {{ \Illuminate\Support\Str::limit($book->title, 40) }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="{{ route('books.update', $book->id) }}" method="POST">
+                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="_method" value="PUT">
+                        <div class="modal-body">
+                            <!-- Error messages will be shown at page level -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_isbn_{{ $book->id }}" class="form-label">ISBN *</label>
+                                    <input type="text" class="form-control" id="edit_isbn_{{ $book->id }}" name="isbn" value="{{ $book->isbn }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_title_{{ $book->id }}" class="form-label">Title *</label>
+                                    <input type="text" class="form-control" id="edit_title_{{ $book->id }}" name="title" value="{{ $book->title }}" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit_authors_editors_{{ $book->id }}" class="form-label">Authors/Editors *</label>
+                                <input type="text" class="form-control" id="edit_authors_editors_{{ $book->id }}" name="authors_editors" value="{{ $book->authors_editors }}" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_year_{{ $book->id }}" class="form-label">Year</label>
+                                    <input type="number" class="form-control" id="edit_year_{{ $book->id }}" name="year" value="{{ $book->year }}" min="1900" max="2099">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_pages_{{ $book->id }}" class="form-label">Pages</label>
+                                    <input type="number" class="form-control" id="edit_pages_{{ $book->id }}" name="pages" value="{{ $book->pages }}" min="1">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_price_{{ $book->id }}" class="form-label">Price (RM)</label>
+                                    <input type="number" class="form-control" id="edit_price_{{ $book->id }}" name="price" value="{{ $book->price }}" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_category_{{ $book->id }}" class="form-label">Category</label>
+                                    <input type="text" class="form-control" id="edit_category_{{ $book->id }}" name="category" value="{{ $book->category }}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_other_category_{{ $book->id }}" class="form-label">Other Category</label>
+                                    <input type="text" class="form-control" id="edit_other_category_{{ $book->id }}" name="other_category" value="{{ $book->other_category }}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_stock_{{ $book->id }}" class="form-label">Stock</label>
+                                    <input type="number" class="form-control" id="edit_stock_{{ $book->id }}" name="stock" value="{{ $book->stock }}" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End modal-body -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Book</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

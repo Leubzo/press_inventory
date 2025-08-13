@@ -452,6 +452,33 @@
         </div>
     </div>
 
+    <!-- Success/Error Messages -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <!-- Main Content Card -->
     <div class="content-card">
         <!-- Header Section -->
@@ -611,5 +638,68 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle "Update Book" button clicks using event delegation
+    document.addEventListener('click', function(e) {
+        // Check if clicked element is an "Update Book" button
+        if (e.target.type === 'submit' && e.target.textContent.includes('Update Book')) {
+            const modal = e.target.closest('[id^="editModal"]');
+            if (modal) {
+                const modalForm = modal.querySelector('form');
+                
+                if (modalForm) {
+                    // Prevent the default click behavior
+                    e.preventDefault();
+                    
+                    // Show loading indicator
+                    const originalText = e.target.innerHTML;
+                    e.target.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+                    e.target.disabled = true;
+                    
+                    // Collect all input fields from the modal
+                    const allModalInputs = modal.querySelectorAll('input, select, textarea');
+                    const formData = new FormData();
+                    
+                    // Add CSRF token and method
+                    formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
+                    formData.append('_method', 'PUT');
+                    
+                    // Add all input values from the modal
+                    allModalInputs.forEach((input) => {
+                        if (input.name && input.name !== '_token' && input.name !== '_method') {
+                            formData.append(input.name, input.value);
+                        }
+                    });
+                    
+                    // Submit using fetch
+                    fetch(modalForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Update failed. Please try again.');
+                            e.target.innerHTML = originalText;
+                            e.target.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        alert('Network error. Please try again.');
+                        e.target.innerHTML = originalText;
+                        e.target.disabled = false;
+                    });
+                }
+            }
+        }
+    });
+});
+</script>
 
 @endsection
