@@ -15,14 +15,16 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+            <div class="mb-8">
+                <a href="/" class="block">
+                    <x-application-logo class="w-32 h-32 mx-auto drop-shadow-lg hover:drop-shadow-xl transition-all duration-300" />
                 </a>
+                <h1 class="text-center text-2xl font-bold text-gray-800 dark:text-white mt-4">UUM Press Inventory</h1>
+                <p class="text-center text-gray-600 dark:text-gray-300 mt-2">Welcome to the inventory management system</p>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
+            <div class="w-full sm:max-w-lg mt-6 px-8 py-8 bg-white dark:bg-gray-800 shadow-2xl overflow-hidden sm:rounded-2xl border border-gray-200 dark:border-gray-700">
                 {{ $slot }}
             </div>
         </div>

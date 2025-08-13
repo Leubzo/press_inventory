@@ -208,8 +208,8 @@
                 <div class="col-lg-6">
                     <div class="login-left h-100">
                         <div>
-                            <i class="fas fa-books system-icon"></i>
-                            <h1 class="system-title">Digital Book Inventory Management System</h1>
+                            <img src="{{ asset('images/uum-press-logo.jpg') }}" alt="UUM Press Logo" class="system-logo mb-3" style="max-width: 120px; height: auto; border-radius: 10px;">
+                            <h1 class="system-title">UUM Press Inventory Management System</h1>
                             <p class="system-subtitle">Streamline your book inventory with modern technology</p>
                             
                             <ul class="feature-list">
@@ -229,8 +229,9 @@
                     <div class="login-right">
                         <div class="login-form">
                             <div class="form-title">
-                                <h2>Welcome Back</h2>
-                                <p>Please sign in to your account</p>
+                                <img src="{{ asset('images/uum-press-logo.jpg') }}" alt="UUM Press Logo" style="max-width: 80px; height: auto; margin: 0 auto 20px; border-radius: 8px; display: block;">
+                                <h2>Welcome to UUM Press</h2>
+                                <p>Please sign in to access the inventory system</p>
                             </div>
                             
                             <!-- Display validation errors -->

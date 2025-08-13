@@ -113,10 +113,11 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
     .isbn-code {
         font-family: 'Courier New', monospace;
         font-size: 0.9rem;
-        color: #718096;
-        background: #f7fafc;
+        color: white;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 0.25rem 0.5rem;
         border-radius: 4px;
+        font-weight: 500;
     }
 
     /* Title and author styling */
