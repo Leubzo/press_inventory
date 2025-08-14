@@ -155,4 +155,20 @@ class Book extends Model
     {
         return $this->total_sold > $this->stock;
     }
+
+    /**
+     * Get the category attribute with consistent N/A display
+     */
+    public function getCategoryDisplayAttribute()
+    {
+        return empty($this->attributes['category']) ? 'N/A' : $this->attributes['category'];
+    }
+
+    /**
+     * Get the other_category attribute with consistent N/A display
+     */
+    public function getOtherCategoryDisplayAttribute()
+    {
+        return empty($this->attributes['other_category']) ? 'N/A' : $this->attributes['other_category'];
+    }
 }

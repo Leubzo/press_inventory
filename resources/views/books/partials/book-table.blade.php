@@ -157,10 +157,26 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
         transition: all 0.3s ease;
     }
 
+    .inline-stock-form input.stock-high {
+        border-color: #84fab0;
+        background: rgba(132, 250, 176, 0.1);
+    }
+
+    .inline-stock-form input.stock-medium {
+        border-color: #ffd89b;
+        background: rgba(255, 216, 155, 0.1);
+    }
+
+    .inline-stock-form input.stock-low {
+        border-color: #ff9a9e;
+        background: rgba(255, 154, 158, 0.1);
+    }
+
     .inline-stock-form input:focus {
         outline: none;
-        border-color: #667eea;
+        border-color: #667eea !important;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        background: white !important;
     }
 
     .inline-stock-form button {
@@ -177,6 +193,31 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
     .inline-stock-form button:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Stock status indicator */
+    .stock-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: white;
+        font-weight: 600;
+    }
+
+    .stock-indicator.stock-high {
+        background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    }
+
+    .stock-indicator.stock-medium {
+        background: linear-gradient(135deg, #ffd89b 0%, #ffb347 100%);
+    }
+
+    .stock-indicator.stock-low {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
     }
 
     /* Action buttons */
@@ -356,11 +397,6 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
                 </a>
             </th>
             <th>
-                <a href="{{ route('books.index', ['sort' => 'pages', 'direction' => $sortField == 'pages' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">
-                    Pages <i class="fas fa-sort"></i>
-                </a>
-            </th>
-            <th>
                 <a href="{{ route('books.index', ['sort' => 'price', 'direction' => $sortField == 'price' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">
                     Price (MYR) <i class="fas fa-sort"></i>
                 </a>
@@ -368,6 +404,11 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
             <th>
                 <a href="{{ route('books.index', ['sort' => 'category', 'direction' => $sortField == 'category' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">
                     Category <i class="fas fa-sort"></i>
+                </a>
+            </th>
+            <th>
+                <a href="{{ route('books.index', ['sort' => 'other_category', 'direction' => $sortField == 'other_category' && $sortDirection == 'asc' ? 'desc' : 'asc']) }}">
+                    Other Category <i class="fas fa-sort"></i>
                 </a>
             </th>
             <th>
@@ -393,29 +434,30 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
             <td>
                 <span class="year-badge">{{ $book->year ?? 'N/A' }}</span>
             </td>
-            <td>{{ $book->pages ?? 'N/A' }}</td>
             <td>
                 <span class="price-display">RM {{ number_format($book->price ?? 0, 2) }}</span>
             </td>
             <td>
-                <span class="category-badge">{{ $book->category ?? 'Uncategorized' }}</span>
+                <span class="category-badge">{{ $book->category_display }}</span>
             </td>
             <td>
+                <span class="category-badge">{{ $book->other_category_display }}</span>
+            </td>
+            <td>
+                @php
+                $stockValue = $book->stock ?? 0;
+                $stockLevel = $stockValue >= 10 ? 'high' : ($stockValue >= 1 ? 'medium' : 'low');
+                $stockIcon = $stockValue >= 10 ? 'check' : ($stockValue >= 1 ? 'exclamation' : 'times');
+                @endphp
                 <form action="{{ route('books.updateStock', $book) }}" method="POST" class="inline-stock-form" data-book-id="{{ $book->id }}">
                     @csrf
                     @method('PATCH')
-                    <input type="number" name="stock" value="{{ $book->stock ?? 0 }}" min="0" required>
+                    <input type="number" name="stock" value="{{ $stockValue }}" min="0" required class="stock-{{ $stockLevel }}">
                     <button type="submit"><i class="fas fa-save"></i></button>
+                    <div class="stock-indicator stock-{{ $stockLevel }}">
+                        <i class="fas fa-{{ $stockIcon }}"></i>
+                    </div>
                 </form>
-                @php
-                $stockValue = $book->stock ?? 0;
-                $stockLevel = $stockValue > 20 ? 'high' : ($stockValue > 10 ? 'medium' : 'low');
-                $stockIcon = $stockValue > 20 ? 'check-circle' : ($stockValue > 10 ? 'exclamation-circle' : 'times-circle');
-                @endphp
-                <span class="stock-badge stock-{{ $stockLevel }} ms-2">
-                    <i class="fas fa-{{ $stockIcon }}"></i>
-                    {{ $stockValue }}
-                </span>
             </td>
             <td>
                 <div class="action-buttons">

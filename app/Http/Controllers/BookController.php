@@ -107,6 +107,14 @@ class BookController extends Controller
             'stock' => 'nullable|integer',
         ]);
 
+        // Convert empty strings to null for consistency
+        if (empty($validated['category'])) {
+            $validated['category'] = null;
+        }
+        if (empty($validated['other_category'])) {
+            $validated['other_category'] = null;
+        }
+
         Book::create($validated);
 
         return redirect()->route('books.index')->with('success', 'Book added successfully.');
@@ -193,6 +201,14 @@ class BookController extends Controller
             'other_category' => 'nullable|string',
             'stock' => 'nullable|integer',
         ]);
+
+        // Convert empty strings to null for consistency
+        if (empty($validated['category'])) {
+            $validated['category'] = null;
+        }
+        if (empty($validated['other_category'])) {
+            $validated['other_category'] = null;
+        }
 
         $book->update($validated);
 
