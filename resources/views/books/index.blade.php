@@ -348,10 +348,10 @@
 
 <!-- Navigation -->
 <nav class="navbar navbar-expand-lg">
-    <div class="container">
-        <a class="navbar-brand" href="#">
-            <i class="fas fa-books me-2"></i>
-            UUM Press Book Inventory
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <x-application-logo style="height: 48px; width: 48px; border-radius: 8px;" class="me-2" />
+            UUM Press Inventory System
         </a>
         <div class="navbar-nav ms-auto">
             <div class="nav-item dropdown">
@@ -380,7 +380,7 @@
 </nav>
 
 <!-- Tab Navigation -->
-<div class="container mt-3">
+<div class="container-fluid mt-3">
     <ul class="nav nav-tabs custom-tabs">
         <li class="nav-item">
             <a class="nav-link active" href="{{ route('books.index') }}">
@@ -404,14 +404,14 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#" onclick="alert('Settings feature coming soon!')">
-                <i class="fas fa-cog me-2"></i>Settings
+            <a class="nav-link" href="{{ route('sales.index') }}">
+                <i class="fas fa-shopping-cart me-2"></i>Sales
             </a>
         </li>
     </ul>
 </div>
 
-<div class="container main-container">
+<div class="container-fluid main-container">
     <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-lg-3 col-md-6 mb-3">

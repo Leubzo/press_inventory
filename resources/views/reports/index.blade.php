@@ -207,6 +207,73 @@
             max-width: 100% !important;
         }
 
+        .platform-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            margin: 0.1rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .platform-shopee { background-color: #ff5722; color: white; }
+        .platform-lazada { background-color: #1565c0; color: white; }
+        .platform-tiktokshop { background-color: #000; color: white; }
+        .platform-facebook { background-color: #4267b2; color: white; }
+        .platform-instagram { background-color: #e4405f; color: white; }
+        .platform-offline { background-color: #6c757d; color: white; }
+        .platform-other { background-color: #17a2b8; color: white; }
+
+        /* Tab Navigation Styles */
+        .custom-tabs {
+            background: white;
+            border-radius: 10px 10px 0 0;
+            padding: 0.5rem 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        .custom-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            margin-right: 0.5rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .custom-tabs .nav-link:hover {
+            background: #f8f9fa;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .custom-tabs .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .custom-tabs .nav-link .badge {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+
         @media (max-width: 768px) {
             .metric-item {
                 flex-direction: column;
@@ -227,26 +294,24 @@
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="{{ route('books.index') }}">
-                <i class="fas fa-books me-2"></i>
-                UUM Press Book Inventory
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <x-application-logo style="height: 48px; width: 48px; border-radius: 8px;" class="me-2" />
+                UUM Press Inventory System
             </a>
             <div class="navbar-nav ms-auto">
-                <a href="{{ route('books.index') }}" class="btn btn-light btn-sm me-2">
-                    <i class="fas fa-book me-1"></i> Books
-                </a>
-                <a href="{{ route('audit-logs.index') }}" class="btn btn-light btn-sm me-2">
-                    <i class="fas fa-history me-1"></i> Audit Logs
-                </a>
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user-circle me-1"></i>
-                        {{ auth()->user()->name }}
+                        Welcome, {{ auth()->user()->name }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
                         <li>
-                            <form action="{{ route('logout') }}" method="POST">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                                 @csrf
                                 <button type="submit" class="dropdown-item text-danger">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
@@ -259,7 +324,39 @@
         </div>
     </nav>
 
-    <div class="container main-container">
+    <!-- Tab Navigation -->
+    <div class="container-fluid mt-3">
+        <ul class="nav nav-tabs custom-tabs">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('books.index') }}">
+                    <i class="fas fa-book me-2"></i>Inventory
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('audit-logs.index') }}">
+                    <i class="fas fa-history me-2"></i>Audit Logs
+                    @php
+                    $recentLogsCount = \App\Models\AuditLog::where('created_at', '>=', now()->subHours(24))->count();
+                    @endphp
+                    @if($recentLogsCount > 0)
+                    <span class="badge bg-danger ms-1">{{ $recentLogsCount }} new</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ route('reports.index') }}">
+                    <i class="fas fa-chart-bar me-2"></i>Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('sales.index') }}">
+                    <i class="fas fa-shopping-cart me-2"></i>Sales
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="container-fluid main-container">
         <!-- Page Header -->
         <div class="page-header">
             <div class="d-flex justify-content-between align-items-center">
@@ -272,9 +369,6 @@
                 <div class="d-flex gap-2">
                     <a href="{{ route('reports.export', array_merge(request()->all(), ['format' => 'csv'])) }}" class="btn btn-success btn-custom">
                         <i class="fas fa-download me-2"></i>Export CSV
-                    </a>
-                    <a href="{{ route('books.index') }}" class="btn btn-primary btn-custom">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Books
                     </a>
                 </div>
             </div>
@@ -438,6 +532,120 @@
             </div>
         </div>
 
+        <!-- Sales Analytics Section -->
+        @if(isset($reports['sales']) && $reports['sales']['total_sales'] > 0)
+        <div class="row">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card" style="border-left-color: #28a745;">
+                    <h6 class="mb-3"><i class="fas fa-shopping-cart me-2"></i>Sales Summary</h6>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Sales</span>
+                        <span class="metric-value success">{{ $reports['sales']['total_sales'] }}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Revenue</span>
+                        <span class="metric-value success">RM {{ number_format($reports['sales']['total_revenue'], 2) }}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Books Sold</span>
+                        <span class="metric-value">{{ $reports['sales']['total_quantity'] }}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Avg Sale Value</span>
+                        <span class="metric-value">RM {{ number_format($reports['sales']['avg_sale_value'], 2) }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-9">
+                <div class="chart-container">
+                    <h5 class="chart-title">Sales by Platform</h5>
+                    <div class="chart-wrapper">
+                        <canvas id="platformChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Selling Books -->
+        @if($reports['sales']['top_selling_books']->count() > 0)
+        <div class="table-container">
+            <h5 class="mb-3"><i class="fas fa-trophy me-2"></i>Top Selling Books</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Category</th>
+                            <th>Quantity Sold</th>
+                            <th>Sales Count</th>
+                            <th>Total Revenue</th>
+                            <th>Avg Sale Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($reports['sales']['top_selling_books'] as $bookSale)
+                        <tr>
+                            <td><strong>{{ $bookSale['book']->title }}</strong></td>
+                            <td>{{ $bookSale['book']->category ?: 'Uncategorized' }}</td>
+                            <td><span class="badge bg-primary">{{ $bookSale['total_quantity'] }}</span></td>
+                            <td>{{ $bookSale['sales_count'] }}</td>
+                            <td><strong class="text-success">RM {{ number_format($bookSale['total_revenue'], 2) }}</strong></td>
+                            <td>RM {{ number_format($bookSale['avg_sale_price'], 2) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        <!-- Platform Performance -->
+        @if($reports['sales']['sales_by_platform']->count() > 0)
+        <div class="table-container">
+            <h5 class="mb-3"><i class="fas fa-store me-2"></i>Platform Performance</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Platform</th>
+                            <th>Total Sales</th>
+                            <th>Revenue</th>
+                            <th>Books Sold</th>
+                            <th>Avg Sale Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($reports['sales']['sales_by_platform'] as $platform)
+                        <tr>
+                            <td>
+                                @php
+                                    $platformClass = 'platform-' . strtolower(str_replace(' ', '', $platform['platform']));
+                                @endphp
+                                <span class="platform-badge {{ $platformClass }}">{{ $platform['platform'] }}</span>
+                            </td>
+                            <td><strong>{{ $platform['total_sales'] }}</strong></td>
+                            <td><strong class="text-success">RM {{ number_format($platform['total_revenue'], 2) }}</strong></td>
+                            <td>{{ $platform['total_quantity'] }}</td>
+                            <td>RM {{ number_format($platform['avg_sale_value'], 2) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+        @else
+        <div class="table-container">
+            <div class="text-center py-4">
+                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Sales Data</h5>
+                <p class="text-muted">No sales recorded for the selected period and filters.</p>
+                <a href="{{ route('sales.index') }}" class="btn btn-primary">Start Recording Sales</a>
+            </div>
+        </div>
+        @endif
+
         <!-- Category Analysis Table -->
         @if($reports['categories']->count() > 0)
         <div class="table-container">
@@ -587,6 +795,59 @@
                 }
             }
         });
+
+        // Platform Sales Chart (only if sales data exists)
+        @if(isset($reports['sales']) && $reports['sales']['total_sales'] > 0 && $reports['sales']['sales_by_platform']->count() > 0)
+        const platformCtx = document.getElementById('platformChart').getContext('2d');
+        new Chart(platformCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    @foreach($reports['sales']['sales_by_platform'] as $platform)
+                        '{{ addslashes($platform['platform']) }}',
+                    @endforeach
+                ],
+                datasets: [{
+                    label: 'Revenue (RM)',
+                    data: [
+                        @foreach($reports['sales']['sales_by_platform'] as $platform)
+                            {{ $platform['total_revenue'] }},
+                        @endforeach
+                    ],
+                    backgroundColor: [
+                        '#ff5722', // Shopee orange
+                        '#1565c0', // Lazada blue
+                        '#000000', // TikTok black
+                        '#4267b2', // Facebook blue
+                        '#e4405f', // Instagram pink
+                        '#6c757d', // Offline gray
+                        '#17a2b8', // Other teal
+                        '#ffc107', // Additional yellow
+                        '#28a745', // Additional green
+                        '#dc3545'  // Additional red
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': RM ' + context.parsed.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        @endif
     </script>
 </body>
 </html>

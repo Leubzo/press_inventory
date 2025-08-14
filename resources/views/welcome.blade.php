@@ -328,7 +328,7 @@
                                 <small class="text-muted d-block text-center">
                                     <strong>Demo Credentials:</strong><br>
                                     admin@bookstore.com<br>
-                                    password123
+                                    password123<br>
                                 </small>
                             </div>
                         </div>

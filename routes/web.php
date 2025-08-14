@@ -13,7 +13,7 @@ Route::get('/', function () {
 })->name('home');
 
 // Protected routes (require login)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     // Redirect after login to books index
     Route::get('/dashboard', function () {
@@ -32,6 +32,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reports routes
     Route::get('/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('reports.index');
     Route::get('/reports/export', [App\Http\Controllers\ReportsController::class, 'export'])->name('reports.export');
+    
+    // Sales routes (specific routes first, then resource routes)
+    Route::get('/sales/search-books', [App\Http\Controllers\SalesController::class, 'searchBooks'])->name('sales.search-books');
+    Route::resource('sales', App\Http\Controllers\SalesController::class)->except(['create', 'edit']);
 });
 
 // Authentication routes (provided by Breeze)

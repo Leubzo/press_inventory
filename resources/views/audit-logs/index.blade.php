@@ -256,6 +256,56 @@
             color: white;
         }
 
+        /* Tab Navigation Styles */
+        .custom-tabs {
+            background: white;
+            border-radius: 10px 10px 0 0;
+            padding: 0.5rem 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        .custom-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            margin-right: 0.5rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .custom-tabs .nav-link:hover {
+            background: #f8f9fa;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .custom-tabs .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .custom-tabs .nav-link .badge {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+
         @media (max-width: 768px) {
             .change-values {
                 flex-direction: column;
@@ -272,23 +322,24 @@
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="{{ route('books.index') }}">
-                <i class="fas fa-books me-2"></i>
-                UUM Press Book Inventory
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <x-application-logo style="height: 48px; width: 48px; border-radius: 8px;" class="me-2" />
+                UUM Press Inventory System
             </a>
             <div class="navbar-nav ms-auto">
-                <a href="{{ route('books.index') }}" class="btn btn-light btn-sm me-2">
-                    <i class="fas fa-book me-1"></i> Books
-                </a>
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user-circle me-1"></i>
-                        {{ auth()->user()->name }}
+                        Welcome, {{ auth()->user()->name }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
                         <li>
-                            <form action="{{ route('logout') }}" method="POST">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                                 @csrf
                                 <button type="submit" class="dropdown-item text-danger">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
@@ -301,7 +352,39 @@
         </div>
     </nav>
 
-    <div class="container main-container">
+    <!-- Tab Navigation -->
+    <div class="container-fluid mt-3">
+        <ul class="nav nav-tabs custom-tabs">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('books.index') }}">
+                    <i class="fas fa-book me-2"></i>Inventory
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ route('audit-logs.index') }}">
+                    <i class="fas fa-history me-2"></i>Audit Logs
+                    @php
+                    $recentLogsCount = \App\Models\AuditLog::where('created_at', '>=', now()->subHours(24))->count();
+                    @endphp
+                    @if($recentLogsCount > 0)
+                    <span class="badge bg-danger ms-1">{{ $recentLogsCount }} new</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('reports.index') }}">
+                    <i class="fas fa-chart-bar me-2"></i>Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('sales.index') }}">
+                    <i class="fas fa-shopping-cart me-2"></i>Sales
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="container-fluid main-container">
         <!-- Page Header -->
         <div class="page-header">
             <div class="d-flex justify-content-between align-items-center">
@@ -310,11 +393,6 @@
                         <i class="fas fa-history me-2"></i>Audit Logs
                     </h1>
                     <p class="text-muted mb-0">Track all changes made to the inventory system</p>
-                </div>
-                <div>
-                    <a href="{{ route('books.index') }}" class="btn btn-primary btn-custom">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Books
-                    </a>
                 </div>
             </div>
         </div>
