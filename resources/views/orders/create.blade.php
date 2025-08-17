@@ -208,12 +208,16 @@ function updateOrderDisplay() {
     const submitBtn = document.getElementById('submitOrderBtn');
 
     if (orderItems.length === 0) {
-        emptyCart.style.display = 'block';
+        if (emptyCart) {
+            emptyCart.style.display = 'block';
+        }
         submitBtn.disabled = true;
         return;
     }
 
-    emptyCart.style.display = 'none';
+    if (emptyCart) {
+        emptyCart.style.display = 'none';
+    }
     submitBtn.disabled = false;
 
     // Re-number items
@@ -338,10 +342,7 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            // Clear form and redirect
-            orderItems = [];
-            updateOrderDisplay();
-            document.getElementById('purpose').value = '';
+            // Redirect to pending orders page
             window.location.href = '{{ route("orders.pending") }}';
         } else {
             alert('Error: ' + data.message);
