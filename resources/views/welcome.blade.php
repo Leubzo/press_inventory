@@ -211,16 +211,16 @@
                     <div class="login-left h-100">
                         <div>
                             <img src="{{ asset('images/uum-press-logo.jpg') }}" alt="UUM Press Logo" class="system-logo mb-3" style="max-width: 120px; height: auto; border-radius: 10px;">
-                            <h1 class="system-title">UUM Press Inventory Management System</h1>
+                            <h1 class="system-title">UUM Press Inventory System</h1>
                             <p class="system-subtitle">Streamline your book inventory with modern technology</p>
                             
                             <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Real-time inventory tracking</li>
-                                <li><i class="fas fa-check"></i>Barcode scanning support</li>
-                                <li><i class="fas fa-check"></i>CSV bulk import/export</li>
-                                <li><i class="fas fa-check"></i>Advanced search & filtering</li>
-                                <li><i class="fas fa-check"></i>Mobile-responsive design</li>
-                                <li><i class="fas fa-check"></i>Secure data management</li>
+                                <li><i class="fas fa-check"></i>Multi-platform Order Management</li>
+                                <li><i class="fas fa-check"></i>Comprehensive Audit Trail</li>
+                                <li><i class="fas fa-check"></i>Advanced Sales Analytics</li>
+                                <li><i class="fas fa-check"></i>Smart Order Workflow</li>
+                                <li><i class="fas fa-check"></i>Real-time Inventory Reports</li>
+                                <li><i class="fas fa-check"></i>Barcode Scanner Integration</li>
                             </ul>
                         </div>
                     </div>
