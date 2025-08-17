@@ -16,11 +16,6 @@
             --danger-gradient: linear-gradient(135deg, #f77062 0%, #fe5196 100%);
         }
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
 
         .navbar {
             background: var(--primary-gradient);

@@ -29,7 +29,7 @@
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
             min-height: 100vh;
         }
 
@@ -80,7 +80,7 @@
 
         .custom-tabs .nav-link.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            color: white !important;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 

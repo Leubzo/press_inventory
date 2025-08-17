@@ -89,6 +89,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'purpose' => 'nullable|string|max:1000',
+            'platform' => 'required|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.book_id' => 'required|exists:books,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -103,6 +104,7 @@ class OrderController extends Controller
                 'order_number' => Order::generateOrderNumber(),
                 'items_count' => count($request->items),
                 'purpose' => $request->purpose,
+                'platform' => $request->platform,
                 'requester_id' => Auth::id(),
                 'status' => 'pending'
             ]);

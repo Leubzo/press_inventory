@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Book;
 use App\Models\AuditLog;
-use App\Models\Sale;
+use App\Models\Order;
+use App\Models\OrderItem;
 use Carbon\Carbon;
 use DB;
 
@@ -13,9 +14,22 @@ class ReportsController extends Controller
 {
     public function index(Request $request)
     {
+        // Redirect to inventory as default
+        return redirect()->route('reports.inventory');
+    }
+    
+    public function inventory(Request $request)
+    {
         $reports = $this->generateReports($request);
         
-        return view('reports.index', compact('reports'));
+        return view('reports.inventory', compact('reports'));
+    }
+    
+    public function sales(Request $request)
+    {
+        $reports = $this->generateReports($request);
+        
+        return view('reports.sales', compact('reports'));
     }
     
     private function generateReports(Request $request)
@@ -45,32 +59,40 @@ class ReportsController extends Controller
         
         $auditData = $auditLogs->get();
         
-        // Get sales data for the same period
-        $salesData = Sale::with('book')
-            ->whereBetween('sale_date', [
+        // Get order-based sales data for the same period (fulfilled orders only)
+        $platform = $request->get('platform');
+        $ordersData = Order::with(['orderItems.book'])
+            ->where('status', 'fulfilled')
+            ->whereBetween('fulfillment_date', [
                 Carbon::parse($dateFrom, 'Asia/Kuala_Lumpur')->startOfDay(),
                 Carbon::parse($dateTo, 'Asia/Kuala_Lumpur')->endOfDay()
             ]);
             
+        if ($platform) {
+            $ordersData->where('platform', $platform);
+        }
+            
         if ($category) {
-            $salesData->whereHas('book', function($query) use ($category) {
+            $ordersData->whereHas('orderItems.book', function($query) use ($category) {
                 $query->where('category', $category);
             });
         }
         
-        $salesData = $salesData->get();
+        $ordersData = $ordersData->get();
 
         return [
             'summary' => $this->getSummaryStats($booksData),
             'inventory' => $this->getInventoryStats($booksData),
             'activity' => $this->getActivityStats($auditData, $dateFrom, $dateTo),
             'categories' => $this->getCategoryStats($booksData),
-            'sales' => $this->getSalesStats($salesData, $dateFrom, $dateTo),
+            'sales' => $this->getOrderBasedSalesStats($ordersData, $dateFrom, $dateTo),
             'filters' => [
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'category' => $category,
-                'available_categories' => Book::distinct('category')->whereNotNull('category')->pluck('category')->sort()
+                'platform' => $platform,
+                'available_categories' => Book::distinct('category')->whereNotNull('category')->pluck('category')->sort(),
+                'available_platforms' => Order::distinct('platform')->whereNotNull('platform')->pluck('platform')->sort()
             ]
         ];
     }
@@ -154,50 +176,113 @@ class ReportsController extends Controller
         })->sortByDesc('total_value');
     }
     
-    private function getSalesStats($sales, $dateFrom, $dateTo)
+    private function getOrderBasedSalesStats($orders, $dateFrom, $dateTo)
     {
-        $salesByDate = $sales->groupBy(function($sale) {
-            return $sale->sale_date->toDateString();
-        })->map(function($daySales) {
+        if ($orders->isEmpty()) {
             return [
-                'total_sales' => $daySales->count(),
-                'total_revenue' => $daySales->sum('total_price'),
-                'total_quantity' => $daySales->sum('quantity')
+                'total_orders' => 0,
+                'total_revenue' => 0,
+                'total_quantity' => 0,
+                'avg_order_value' => 0,
+                'unique_books_sold' => 0,
+                'platforms_used' => 0,
+                'sales_by_date' => collect(),
+                'sales_by_platform' => collect(),
+                'top_selling_books' => collect(),
+                'recent_orders' => collect(),
+                'avg_books_per_order' => 0,
+                'fulfillment_rate' => 0
             ];
-        });
+        }
+
+        // Calculate totals
+        $totalRevenue = 0;
+        $totalQuantity = 0;
+        $allBookIds = collect();
         
-        $salesByPlatform = $sales->groupBy('platform')->map(function($platformSales, $platform) {
+        foreach ($orders as $order) {
+            foreach ($order->orderItems as $item) {
+                $totalRevenue += $item->quantity_fulfilled * $item->unit_price;
+                $totalQuantity += $item->quantity_fulfilled;
+                $allBookIds->push($item->book_id);
+            }
+            $order->total_value = $order->orderItems->sum(function($item) {
+                return $item->quantity_fulfilled * $item->unit_price;
+            });
+        }
+
+        // Sales by platform
+        $salesByPlatform = $orders->groupBy('platform')->map(function($platformOrders, $platform) {
+            $totalRevenue = 0;
+            $totalQuantity = 0;
+            
+            foreach ($platformOrders as $order) {
+                foreach ($order->orderItems as $item) {
+                    $totalRevenue += $item->quantity_fulfilled * $item->unit_price;
+                    $totalQuantity += $item->quantity_fulfilled;
+                }
+            }
+            
             return [
                 'platform' => $platform,
-                'total_sales' => $platformSales->count(),
-                'total_revenue' => $platformSales->sum('total_price'),
-                'total_quantity' => $platformSales->sum('quantity'),
-                'avg_sale_value' => $platformSales->avg('total_price')
+                'total_orders' => $platformOrders->count(),
+                'total_revenue' => $totalRevenue,
+                'total_quantity' => $totalQuantity,
+                'avg_order_value' => $platformOrders->count() > 0 ? $totalRevenue / $platformOrders->count() : 0,
+                'market_share' => $totalRevenue > 0 ? ($totalRevenue / $totalRevenue) * 100 : 0
             ];
         })->sortByDesc('total_revenue');
-        
-        $topSellingBooks = $sales->groupBy('book.id')->map(function($bookSales) {
-            $book = $bookSales->first()->book;
-            return [
-                'book' => $book,
-                'total_quantity' => $bookSales->sum('quantity'),
-                'total_revenue' => $bookSales->sum('total_price'),
-                'sales_count' => $bookSales->count(),
-                'avg_sale_price' => $bookSales->avg('unit_price')
-            ];
+
+        // Calculate market share properly
+        if ($totalRevenue > 0) {
+            $salesByPlatform = $salesByPlatform->map(function($platformData) use ($totalRevenue) {
+                $platformData['market_share'] = ($platformData['total_revenue'] / $totalRevenue) * 100;
+                return $platformData;
+            });
+        }
+
+        // Top selling books
+        $bookSales = [];
+        foreach ($orders as $order) {
+            foreach ($order->orderItems as $item) {
+                $bookId = $item->book_id;
+                if (!isset($bookSales[$bookId])) {
+                    $bookSales[$bookId] = [
+                        'book' => $item->book,
+                        'total_quantity' => 0,
+                        'total_revenue' => 0,
+                        'orders_count' => 0,
+                        'total_unit_price' => 0,
+                        'price_count' => 0
+                    ];
+                }
+                
+                $bookSales[$bookId]['total_quantity'] += $item->quantity_fulfilled;
+                $bookSales[$bookId]['total_revenue'] += $item->quantity_fulfilled * $item->unit_price;
+                $bookSales[$bookId]['orders_count']++;
+                $bookSales[$bookId]['total_unit_price'] += $item->unit_price;
+                $bookSales[$bookId]['price_count']++;
+            }
+        }
+
+        $topSellingBooks = collect($bookSales)->map(function($bookData) {
+            $bookData['avg_sale_price'] = $bookData['price_count'] > 0 ? $bookData['total_unit_price'] / $bookData['price_count'] : 0;
+            unset($bookData['total_unit_price'], $bookData['price_count']);
+            return $bookData;
         })->sortByDesc('total_revenue')->take(10);
-        
+
         return [
-            'total_sales' => $sales->count(),
-            'total_revenue' => $sales->sum('total_price'),
-            'total_quantity' => $sales->sum('quantity'),
-            'avg_sale_value' => $sales->avg('total_price'),
-            'unique_books_sold' => $sales->pluck('book_id')->unique()->count(),
-            'platforms_used' => $sales->pluck('platform')->unique()->count(),
-            'sales_by_date' => $salesByDate,
+            'total_orders' => $orders->count(),
+            'total_revenue' => $totalRevenue,
+            'total_quantity' => $totalQuantity,
+            'avg_order_value' => $orders->count() > 0 ? $totalRevenue / $orders->count() : 0,
+            'unique_books_sold' => $allBookIds->unique()->count(),
+            'platforms_used' => $orders->pluck('platform')->unique()->count(),
             'sales_by_platform' => $salesByPlatform,
             'top_selling_books' => $topSellingBooks,
-            'recent_sales' => $sales->sortByDesc('sale_date')->take(10)
+            'recent_orders' => $orders->sortByDesc('fulfillment_date')->take(10),
+            'avg_books_per_order' => $orders->count() > 0 ? $totalQuantity / $orders->count() : 0,
+            'fulfillment_rate' => 100 // All orders in this dataset are fulfilled
         ];
     }
     

@@ -13,6 +13,7 @@ class Order extends Model
         'items_count',
         'status',
         'purpose',
+        'platform',
         'requester_id',
         'approver_id',
         'fulfiller_id',

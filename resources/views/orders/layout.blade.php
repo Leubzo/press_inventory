@@ -3,7 +3,7 @@
 @section('content')
 <!-- Order Management Navigation -->
 <div class="card-container">
-        <ul class="nav nav-pills mb-3" id="orderTabs">
+        <ul class="nav nav-pills custom-tabs" id="orderTabs">
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('orders.create') || request()->routeIs('orders.index') ? 'active' : '' }}" href="{{ route('orders.create') }}">
                     <i class="fas fa-plus me-2"></i>Create Order

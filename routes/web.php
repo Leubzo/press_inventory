@@ -29,16 +29,14 @@ Route::middleware(['auth'])->group(function () {
     // Audit logs route
     Route::get('/audit-logs', [App\Http\Controllers\AuditLogController::class, 'index'])->name('audit-logs.index');
     
-    // Reports routes
+    // Reports routes (separate pages for each report type)
     Route::get('/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('reports.index');
+    Route::get('/reports/inventory', [App\Http\Controllers\ReportsController::class, 'inventory'])->name('reports.inventory');
+    Route::get('/reports/sales', [App\Http\Controllers\ReportsController::class, 'sales'])->name('reports.sales');
     Route::get('/reports/export', [App\Http\Controllers\ReportsController::class, 'export'])->name('reports.export');
     
-    // Sales routes (specific routes first, then resource routes)
+    // Book search route (for order creation)
     Route::get('/sales/search-books', [App\Http\Controllers\SalesController::class, 'searchBooks'])->name('sales.search-books');
-    Route::get('/sales', function () {
-        return redirect()->route('orders.index');
-    })->name('sales.index');
-    Route::resource('sales', App\Http\Controllers\SalesController::class)->except(['create', 'edit', 'index']);
     
     // Order management pages (separate routes for each tab)
     Route::get('/orders', [App\Http\Controllers\OrderController::class, 'create'])->name('orders.index');

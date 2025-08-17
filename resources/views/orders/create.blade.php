@@ -22,23 +22,19 @@
 <form id="orderForm" action="{{ route('orders.store') }}" method="POST">
     @csrf
     
-    <!-- Purpose Field -->
+    <!-- Platform Field -->
     <div class="mb-4">
-        <label for="purpose" class="form-label">Purpose (Optional)</label>
-        <input type="text" id="purpose" name="purpose" class="form-control" 
-               placeholder="Enter the purpose for this order..." value="{{ old('purpose') }}">
-        <small class="text-muted">Optional: Describe the purpose or reason for this order</small>
-    </div>
-
-    <!-- Order Items -->
-    <div class="mb-4">
-        <h6>Order Items</h6>
-        <div id="orderCart" class="order-cart">
-            <div class="text-center text-muted py-3" id="emptyCart">
-                <i class="fas fa-shopping-cart fa-2x mb-2"></i>
-                <p>No books added yet. Search and add books below.</p>
-            </div>
-        </div>
+        <label for="platform" class="form-label">Platform</label>
+        <select id="platform" name="platform" class="form-control" required>
+            <option value="">Select platform...</option>
+            <option value="Shopee" {{ old('platform') == 'Shopee' ? 'selected' : '' }}>Shopee</option>
+            <option value="Lazada" {{ old('platform') == 'Lazada' ? 'selected' : '' }}>Lazada</option>
+            <option value="TikTok Shop" {{ old('platform') == 'TikTok Shop' ? 'selected' : '' }}>TikTok Shop</option>
+            <option value="Walk-in" {{ old('platform') == 'Walk-in' ? 'selected' : '' }}>Walk-in</option>
+            <option value="Phone Order" {{ old('platform') == 'Phone Order' ? 'selected' : '' }}>Phone Order</option>
+            <option value="Other" {{ old('platform') == 'Other' ? 'selected' : '' }}>Other</option>
+        </select>
+        <small class="text-muted">Select the platform where this order originated</small>
     </div>
 
     <!-- Add Book Section -->
@@ -68,6 +64,25 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="mb-4">
+        <h6>Order Items</h6>
+        <div id="orderCart" class="order-cart">
+            <div class="text-center text-muted py-3" id="emptyCart">
+                <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                <p>No books added yet. Search and add books above.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purpose Field -->
+    <div class="mb-4">
+        <label for="purpose" class="form-label">Purpose (Optional)</label>
+        <input type="text" id="purpose" name="purpose" class="form-control" 
+               placeholder="Enter the purpose for this order..." value="{{ old('purpose') }}">
+        <small class="text-muted">Optional: Describe the purpose or reason for this order</small>
     </div>
 
     <!-- Submit Section -->
@@ -304,6 +319,7 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     const formData = new FormData();
     formData.append('_token', document.querySelector('input[name="_token"]').value);
     formData.append('purpose', document.getElementById('purpose').value);
+    formData.append('platform', document.getElementById('platform').value);
     
     orderItems.forEach((item, index) => {
         formData.append(`items[${index}][book_id]`, item.book_id);

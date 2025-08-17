@@ -124,37 +124,6 @@ class Book extends Model
             ->latest();
     }
     
-    /**
-     * Relationship with sales
-     */
-    public function sales(): HasMany
-    {
-        return $this->hasMany(Sale::class);
-    }
-    
-    /**
-     * Get total quantity sold for this book
-     */
-    public function getTotalSoldAttribute()
-    {
-        return $this->sales()->sum('quantity');
-    }
-    
-    /**
-     * Get total revenue from sales for this book
-     */
-    public function getTotalRevenueAttribute()
-    {
-        return $this->sales()->sum('total_price');
-    }
-    
-    /**
-     * Check if sales exceed current stock (needs attention)
-     */
-    public function getNeedsStockUpdateAttribute()
-    {
-        return $this->total_sold > $this->stock;
-    }
 
     /**
      * Get the category attribute with consistent N/A display
