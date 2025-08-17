@@ -33,7 +33,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('reports.index');
     Route::get('/reports/inventory', [App\Http\Controllers\ReportsController::class, 'inventory'])->name('reports.inventory');
     Route::get('/reports/sales', [App\Http\Controllers\ReportsController::class, 'sales'])->name('reports.sales');
-    Route::get('/reports/export', [App\Http\Controllers\ReportsController::class, 'export'])->name('reports.export');
+    
+    // Enhanced reports API routes
+    Route::get('/reports/autocomplete', [App\Http\Controllers\ReportsController::class, 'autocomplete'])->name('reports.autocomplete');
+    Route::get('/reports/book-details/{id}', [App\Http\Controllers\ReportsController::class, 'bookDetails'])->name('reports.book-details');
+    Route::get('/reports/trends', [App\Http\Controllers\ReportsController::class, 'trendsData'])->name('reports.trends');
+    
+    // Export routes with filter support
+    Route::get('/reports/export/inventory', [App\Http\Controllers\ReportsController::class, 'exportInventory'])->name('reports.export.inventory');
+    Route::get('/reports/export/sales', [App\Http\Controllers\ReportsController::class, 'exportSales'])->name('reports.export.sales');
     
     // Book search route (for order creation)
     Route::get('/sales/search-books', [App\Http\Controllers\SalesController::class, 'searchBooks'])->name('sales.search-books');

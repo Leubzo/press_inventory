@@ -20,3 +20,6 @@ yarn-error.log
 /.vscode
 /.zed
 /.claude
+
+# Demo/Test Seeders
+database/seeders/DemoSalesSeeder.php
