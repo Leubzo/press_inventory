@@ -4,13 +4,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BookController;
 use Illuminate\Support\Facades\Auth;
 
-// Smart home route - login page or redirect to books
+// Home/Login route - welcome page or redirect to books if authenticated
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('books.index');
     }
     return view('welcome');
-})->name('home');
+})->name('login'); // Using 'login' name for authentication compatibility
 
 // Protected routes (require login)
 Route::middleware(['auth'])->group(function () {
