@@ -245,6 +245,7 @@ class SalesController extends Controller
                     'title' => $book->title,
                     'authors_editors' => $book->authors_editors,
                     'price' => $book->price,
+                    'selling_price' => $book->price, // Add selling_price alias for compatibility
                     'stock' => $book->stock,
                     'total_sold' => $totalSold,
                     'needs_update' => $totalSold > $book->stock
