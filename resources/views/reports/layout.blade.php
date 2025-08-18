@@ -129,7 +129,7 @@
             border: 1px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
             position: relative;
-            overflow: visible;
+            overflow: hidden;
         }
         
         .stats-card.search-card {
