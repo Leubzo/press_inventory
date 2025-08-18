@@ -849,15 +849,15 @@ function setDateRange(preset) {
             month.setDate(month.getDate() - 30);
             dateFrom.value = month.toISOString().split('T')[0];
             break;
-        case 'this_month':
-            const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-            dateFrom.value = thisMonthStart.toISOString().split('T')[0];
+        case 'six_months':
+            const sixMonths = new Date(today);
+            sixMonths.setMonth(sixMonths.getMonth() - 6);
+            dateFrom.value = sixMonths.toISOString().split('T')[0];
             break;
-        case 'last_month':
-            const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
-            dateFrom.value = lastMonthStart.toISOString().split('T')[0];
-            dateTo.value = lastMonthEnd.toISOString().split('T')[0];
+        case 'one_year':
+            const oneYear = new Date(today);
+            oneYear.setFullYear(oneYear.getFullYear() - 1);
+            dateFrom.value = oneYear.toISOString().split('T')[0];
             break;
     }
 }
@@ -872,8 +872,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="btn-group btn-group-sm" role="group">
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('last_7_days')">7d</button>
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('last_30_days')">30d</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('this_month')">This Month</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('last_month')">Last Month</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('six_months')">6 Months</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('one_year')">1 Year</button>
         </div>
     `;
     
