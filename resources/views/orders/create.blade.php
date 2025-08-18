@@ -138,6 +138,27 @@ document.addEventListener('DOMContentLoaded', function() {
             suggestions.style.display = 'none';
         }
     });
+
+    // Event delegation for order item controls
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[data-action="remove"]')) {
+            const button = e.target.closest('[data-action="remove"]');
+            const bookId = parseInt(button.getAttribute('data-book-id'));
+            removeItem(bookId);
+        }
+    });
+
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('quantity-input')) {
+            const bookId = parseInt(e.target.getAttribute('data-book-id'));
+            const newQuantity = e.target.value;
+            updateItemQuantity(bookId, newQuantity);
+        } else if (e.target.classList.contains('price-input')) {
+            const bookId = parseInt(e.target.getAttribute('data-book-id'));
+            const newPrice = e.target.value;
+            updateItemPrice(bookId, newPrice);
+        }
+    });
 });
 
 function displayBookSuggestions(books) {
@@ -208,9 +229,7 @@ function updateOrderDisplay() {
     const submitBtn = document.getElementById('submitOrderBtn');
 
     if (orderItems.length === 0) {
-        if (emptyCart) {
-            emptyCart.style.display = 'block';
-        }
+        cart.innerHTML = '<div class="text-center text-muted py-3" id="emptyCart"><i class="fas fa-shopping-cart fa-2x mb-2"></i><p>No books added yet. Search and add books above.</p></div>';
         submitBtn.disabled = true;
         return;
     }
@@ -237,13 +256,13 @@ function updateOrderDisplay() {
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Quantity</label>
-                    <input type="number" class="form-control" value="${item.quantity}" 
-                           min="1" onchange="updateItemQuantity(${item.book_id}, this.value)">
+                    <input type="number" class="form-control quantity-input" value="${item.quantity}" 
+                           min="1" data-book-id="${item.book_id}">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Unit Price</label>
-                    <input type="number" class="form-control" value="${item.unit_price}" 
-                           step="0.01" min="0" onchange="updateItemPrice(${item.book_id}, this.value)">
+                    <input type="number" class="form-control price-input" value="${item.unit_price}" 
+                           step="0.01" min="0" data-book-id="${item.book_id}">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Total</label>
@@ -252,7 +271,7 @@ function updateOrderDisplay() {
                 <div class="col-md-1">
                     <label class="form-label">&nbsp;</label>
                     <button type="button" class="btn btn-outline-danger btn-sm w-100" 
-                            onclick="removeItem(${item.book_id})" title="Remove">
+                            data-book-id="${item.book_id}" data-action="remove" title="Remove">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
