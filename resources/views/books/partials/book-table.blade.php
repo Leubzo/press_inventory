@@ -347,6 +347,83 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
         border-bottom: none;
     }
 
+    /* Mobile-friendly table scrolling */
+    .table-scroll-container {
+        position: relative;
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        scroll-behavior: smooth;
+        border-radius: 15px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .table-scroll-container::before,
+    .table-scroll-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    /* Left scroll indicator */
+    .table-scroll-container::before {
+        left: 0;
+        background: linear-gradient(to right, rgba(255,255,255,0.9), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    /* Right scroll indicator */
+    .table-scroll-container::after {
+        right: 0;
+        background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    .table-scroll-container.scrolled-left::before {
+        opacity: 1;
+    }
+
+    .table-scroll-container.scrolled-right::after {
+        opacity: 0;
+    }
+
+    /* Make ISBN column sticky for better navigation */
+    .table-custom th:first-child,
+    .table-custom td:first-child {
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 1;
+        box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    }
+
+    .table-custom thead th:first-child {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Ensure minimum width for all columns on mobile */
+    .table-custom th,
+    .table-custom td {
+        min-width: 120px;
+        white-space: nowrap;
+    }
+
+    .table-custom th:first-child,
+    .table-custom td:first-child {
+        min-width: 140px; /* Slightly wider for ISBN */
+    }
+
+    .table-custom th:last-child,
+    .table-custom td:last-child {
+        min-width: 160px; /* Wider for actions */
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .table-custom thead th,
@@ -366,14 +443,22 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
             padding: 0.4rem;
         }
 
-        /* Reset column widths on mobile */
-        .table-custom th {
-            width: auto !important;
+        /* Ensure table takes full width and allows scrolling */
+        .table-custom {
+            min-width: 1000px; /* Force table to be wider than mobile screen */
+        }
+
+        /* Keep scroll indicators visible on mobile */
+        .table-scroll-container::before,
+        .table-scroll-container::after {
+            width: 15px;
         }
     }
 </style>
 
-<table class="table table-custom">
+<!-- Mobile-friendly scrollable container -->
+<div class="table-scroll-container">
+    <table class="table table-custom">
     <thead>
         <tr>
             <th>
@@ -634,3 +719,4 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
         @endforelse
     </tbody>
 </table>
+</div>

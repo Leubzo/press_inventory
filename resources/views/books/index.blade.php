@@ -573,6 +573,40 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Handle horizontal scroll indicators
+    const scrollContainer = document.querySelector('.table-scroll-container');
+    if (scrollContainer) {
+        function updateScrollIndicators() {
+            const scrollLeft = scrollContainer.scrollLeft;
+            const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+            
+            // Show/hide left indicator
+            if (scrollLeft > 10) {
+                scrollContainer.classList.add('scrolled-left');
+            } else {
+                scrollContainer.classList.remove('scrolled-left');
+            }
+            
+            // Show/hide right indicator
+            if (scrollLeft >= maxScrollLeft - 10) {
+                scrollContainer.classList.add('scrolled-right');
+            } else {
+                scrollContainer.classList.remove('scrolled-right');
+            }
+        }
+        
+        // Update indicators on scroll
+        scrollContainer.addEventListener('scroll', updateScrollIndicators);
+        
+        // Initial check
+        setTimeout(updateScrollIndicators, 100);
+        
+        // Update on window resize
+        window.addEventListener('resize', function() {
+            setTimeout(updateScrollIndicators, 100);
+        });
+    }
+
     // Handle "Update Book" button clicks using event delegation
     document.addEventListener('click', function(e) {
         // Check if clicked element is an "Update Book" button
