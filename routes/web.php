@@ -27,7 +27,6 @@ Route::middleware(['auth'])->group(function () {
     // All book management routes (protected) - excluding edit since we use modal
     Route::resource('books', BookController::class)->except(['edit']);
     Route::post('/books/import', [BookController::class, 'import'])->name('books.import');
-    Route::post('/books/reset', [BookController::class, 'reset'])->name('books.reset');
     Route::patch('/books/{book}/stock', [BookController::class, 'updateStock'])->name('books.updateStock');
     
     // Audit logs route

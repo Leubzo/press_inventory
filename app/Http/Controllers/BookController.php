@@ -237,11 +237,6 @@ class BookController extends Controller
         return redirect()->route('books.index')->with('success', 'Book deleted successfully.');
     }
 
-    public function reset()
-    {
-        DB::table('books')->truncate(); // Truncates all data
-        return redirect()->route('books.index')->with('success', 'All books have been deleted. Table has been reset.');
-    }
 
     // Show the mobile barcode scanning page
     public function scan()

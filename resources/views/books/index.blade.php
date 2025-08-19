@@ -414,12 +414,6 @@
                     <button type="button" class="btn btn-primary btn-custom me-2" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="fas fa-file-import me-1"></i>Import
                     </button>
-                    <form action="{{ route('books.reset') }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to reset all books? This cannot be undone.');">
-                        @csrf
-                        <button type="submit" class="btn btn-danger btn-custom">
-                            <i class="fas fa-trash me-1"></i>Reset
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>
