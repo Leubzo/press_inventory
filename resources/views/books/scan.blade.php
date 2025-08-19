@@ -279,24 +279,6 @@
         border: 2px solid #c3e6cb;
     }
 
-    .back-link {
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-        color: white;
-        text-decoration: none;
-        background: rgba(255, 255, 255, 0.2);
-        padding: 0.5rem 1rem;
-        border-radius: 25px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .back-link:hover {
-        background: rgba(255, 255, 255, 0.3);
-        color: white;
-        text-decoration: none;
-    }
 
     /* Responsive adjustments */
     @media (max-width: 480px) {
@@ -323,10 +305,6 @@
 
 @section('content')
 <div class="scan-container">
-    <a href="{{ route('books.index') }}" class="back-link">
-        <i class="fas fa-arrow-left me-2"></i>Back to Books
-    </a>
-
     <div class="scan-header">
         <h1><i class="fas fa-camera me-2"></i>Barcode Scanner</h1>
         <p>Scan a book's barcode to quickly update stock</p>
@@ -353,12 +331,11 @@
             </button>
         </div>
 
-        <!-- Manual Input -->
+        <!-- Back Button -->
         <div class="manual-input">
-            <input type="text" id="manual-isbn" placeholder="Or enter ISBN manually" maxlength="20">
-            <button type="button" class="scan-btn" id="manual-search-btn">
-                <i class="fas fa-search me-2"></i>Search ISBN
-            </button>
+            <a href="{{ route('books.index') }}" class="scan-btn" style="text-decoration: none; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">
+                <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
         </div>
 
         <!-- Alert Area -->
@@ -399,8 +376,6 @@ document.addEventListener('DOMContentLoaded', function() {
         scannerDisplay: document.getElementById('scanner-display'),
         startScanBtn: document.getElementById('start-scan-btn'),
         stopScanBtn: document.getElementById('stop-scan-btn'),
-        manualIsbn: document.getElementById('manual-isbn'),
-        manualSearchBtn: document.getElementById('manual-search-btn'),
         alertArea: document.getElementById('alert-area'),
         bookDetails: document.getElementById('book-details'),
         bookInfo: document.getElementById('book-info'),
@@ -415,23 +390,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Stop scanning
     elements.stopScanBtn.addEventListener('click', stopScanner);
-    
-    // Manual search
-    elements.manualSearchBtn.addEventListener('click', () => {
-        const isbn = elements.manualIsbn.value.trim();
-        if (isbn) {
-            searchBook(isbn);
-        } else {
-            showAlert('Please enter an ISBN', 'error');
-        }
-    });
-
-    // Enter key on manual input
-    elements.manualIsbn.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            elements.manualSearchBtn.click();
-        }
-    });
 
     // Update stock button
     elements.updateStockBtn.addEventListener('click', updateStock);
@@ -570,9 +528,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         fetch(`/books/${currentBook.id}/stock`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Update failed');
+            }
+        })
         .then(data => {
             showAlert('Stock updated successfully! Redirecting...', 'success');
             setTimeout(() => {
