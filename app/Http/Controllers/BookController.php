@@ -242,4 +242,39 @@ class BookController extends Controller
         DB::table('books')->truncate(); // Truncates all data
         return redirect()->route('books.index')->with('success', 'All books have been deleted. Table has been reset.');
     }
+
+    // Show the mobile barcode scanning page
+    public function scan()
+    {
+        return view('books.scan');
+    }
+
+    // Search for book by ISBN for scanning
+    public function scanSearch(Request $request)
+    {
+        $isbn = $request->input('isbn');
+        
+        if (!$isbn) {
+            return response()->json(['error' => 'ISBN is required'], 400);
+        }
+
+        $book = Book::where('isbn', $isbn)->first();
+
+        if (!$book) {
+            return response()->json(['error' => 'Book not found'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'book' => [
+                'id' => $book->id,
+                'isbn' => $book->isbn,
+                'title' => $book->title,
+                'authors_editors' => $book->authors_editors,
+                'current_stock' => $book->stock ?? 0,
+                'price' => $book->price ?? 0,
+                'category' => $book->category_display,
+            ]
+        ]);
+    }
 }

@@ -580,7 +580,7 @@ class ReportsController extends Controller
         if ($daysOfStock < 30 && $book->stock < 20) {
             return [
                 'recommended' => true,
-                'reason' => "Low stock with good sales velocity (${daysOfStock} days remaining)",
+                'reason' => "Low stock with good sales velocity ($daysOfStock days remaining)",
                 'suggested_quantity' => max(20, $velocity * 2) // 2 months of stock
             ];
         }

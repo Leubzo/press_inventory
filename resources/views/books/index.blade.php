@@ -313,19 +313,6 @@
             margin-bottom: 1rem;
         }
 
-        .action-buttons {
-            flex-direction: column;
-        }
-
-        .action-buttons .btn {
-            font-size: 0.85rem;
-            padding: 0.4rem 0.8rem;
-        }
-
-        .table-responsive {
-            font-size: 0.9rem;
-        }
-
         .search-section {
             padding: 1rem;
         }
@@ -458,20 +445,15 @@
                 </div>
                 <div class="col-md-4">
                     <div class="scanner-section text-center">
-                        <button class="btn btn-light btn-custom" id="startScanner">
+                        <a href="{{ route('books.scan') }}" class="btn btn-light btn-custom">
                             <i class="fas fa-camera me-2"></i>Scan Barcode
-                        </button>
-                        <small class="d-block mt-1 opacity-75">Quick search with camera</small>
+                        </a>
+                        <small class="d-block mt-1 opacity-75">Mobile-friendly stock update</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Hidden scanner box -->
-        <div id="scanner-container" style="width: 100%; display: none; margin: 10px;">
-            <div id="reader" style="width: 100%;"></div>
-            <button class="btn btn-danger mt-2" id="closeScanner">Close Scanner</button>
-        </div>
 
         <!-- Books Table -->
         <div class="table-responsive" id="book-table">

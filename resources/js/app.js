@@ -86,8 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize barcode scanner
-    initBarcodeScanner();
 });
 
 // Function to bind table events (for stock updates, etc.)
@@ -121,97 +119,3 @@ function bindTableEvents() {
     });
 }
 
-function initBarcodeScanner() {
-    const scannerContainer = document.getElementById('scanner-container');
-    const startScannerBtn = document.getElementById('startScanner');
-    const closeScannerBtn = document.getElementById('closeScanner');
-    const searchInput = document.getElementById('searchInput');
-
-    if (!startScannerBtn || !scannerContainer) {
-        console.log('Scanner elements not found');
-        return;
-    }
-
-    let html5QrcodeScanner;
-
-    startScannerBtn.addEventListener('click', async () => {
-        try {
-            console.log('Starting barcode scanner...');
-            
-            // Check if Html5Qrcode is available
-            if (typeof Html5Qrcode === 'undefined') {
-                throw new Error('Html5Qrcode library not loaded');
-            }
-
-            scannerContainer.style.display = 'block';
-            html5QrcodeScanner = new Html5Qrcode("reader");
-            
-            const config = {
-                fps: 10,
-                qrbox: function (viewfinderWidth, viewfinderHeight) {
-                    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-                    return { width: minEdge * 0.8, height: minEdge * 0.8 };
-                },
-                aspectRatio: 1.0
-            };
-
-            await html5QrcodeScanner.start(
-                { facingMode: "environment" },
-                config,
-                (decodedText, decodedResult) => {
-                    console.log(`Code scanned: ${decodedText}`);
-                    searchInput.value = decodedText;
-                    
-                    // Stop scanner and submit search
-                    html5QrcodeScanner.stop().then(() => {
-                        scannerContainer.style.display = 'none';
-                        
-                        // Trigger live search instead of form submit
-                        if (typeof $ !== 'undefined') {
-                            $('input[name="search"]').trigger('keyup');
-                        } else {
-                            document.getElementById('searchForm').submit();
-                        }
-                    }).catch(err => {
-                        console.error('Error stopping scanner:', err);
-                        scannerContainer.style.display = 'none';
-                        document.getElementById('searchForm').submit();
-                    });
-                },
-                (errorMessage) => {
-                    // Silent error handling for scanning failures
-                }
-            );
-
-        } catch (err) {
-            console.error('Camera error:', err);
-            scannerContainer.style.display = 'none';
-            
-            let errorMsg = 'Camera not available. ';
-            if (err.message.includes('Permission')) {
-                errorMsg += 'Please allow camera access and try again.';
-            } else if (err.message.includes('not loaded')) {
-                errorMsg += 'Scanner library not loaded. Please refresh the page.';
-            } else {
-                errorMsg += 'Please check your camera permissions.';
-            }
-            
-            alert(errorMsg);
-        }
-    });
-
-    if (closeScannerBtn) {
-        closeScannerBtn.addEventListener('click', () => {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
-                    scannerContainer.style.display = 'none';
-                }).catch((err) => {
-                    console.error('Error stopping scanner:', err);
-                    scannerContainer.style.display = 'none';
-                });
-            } else {
-                scannerContainer.style.display = 'none';
-            }
-        });
-    }
-}

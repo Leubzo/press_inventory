@@ -20,6 +20,10 @@ Route::middleware(['auth'])->group(function () {
         return redirect()->route('books.index');
     })->name('dashboard');
 
+    // Barcode scanning routes (must be before resource routes)
+    Route::get('/books/scan', [BookController::class, 'scan'])->name('books.scan');
+    Route::get('/books/scan-search', [BookController::class, 'scanSearch'])->name('books.scan.search');
+    
     // All book management routes (protected) - excluding edit since we use modal
     Route::resource('books', BookController::class)->except(['edit']);
     Route::post('/books/import', [BookController::class, 'import'])->name('books.import');

@@ -195,30 +195,6 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
 
-    /* Stock status indicator */
-    .stock-indicator {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.7rem;
-        color: white;
-        font-weight: 600;
-    }
-
-    .stock-indicator.stock-high {
-        background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
-    }
-
-    .stock-indicator.stock-medium {
-        background: linear-gradient(135deg, #ffd89b 0%, #ffb347 100%);
-    }
-
-    .stock-indicator.stock-low {
-        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-    }
 
     /* Action buttons */
     .action-buttons {
@@ -407,24 +383,73 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
-    /* Ensure minimum width for all columns on mobile */
-    .table-custom th,
-    .table-custom td {
-        min-width: 120px;
-        white-space: nowrap;
+    /* Desktop: Make table fit screen width */
+    @media (min-width: 769px) {
+        .table-scroll-container {
+            overflow-x: visible; /* No horizontal scroll on desktop */
+        }
+        
+        .table-custom {
+            width: 100%;
+            table-layout: fixed; /* Fixed layout for consistent column widths */
+        }
+        
+        .table-custom th,
+        .table-custom td {
+            white-space: normal; /* Allow text wrapping on desktop */
+            word-wrap: break-word;
+        }
+        
+        /* Define proportional column widths for desktop */
+        .table-custom th:nth-child(1), .table-custom td:nth-child(1) { width: 12%; } /* ISBN */
+        .table-custom th:nth-child(2), .table-custom td:nth-child(2) { width: 18%; } /* Title */
+        .table-custom th:nth-child(3), .table-custom td:nth-child(3) { width: 15%; } /* Authors */
+        .table-custom th:nth-child(4), .table-custom td:nth-child(4) { width: 8%; }  /* Year */
+        .table-custom th:nth-child(5), .table-custom td:nth-child(5) { width: 10%; } /* Price */
+        .table-custom th:nth-child(6), .table-custom td:nth-child(6) { width: 10%; } /* Category */
+        .table-custom th:nth-child(7), .table-custom td:nth-child(7) { width: 10%; } /* Other Category */
+        .table-custom th:nth-child(8), .table-custom td:nth-child(8) { width: 9%; }  /* Stock */
+        .table-custom th:nth-child(9), .table-custom td:nth-child(9) { width: 8%; }  /* Actions */
+        
+        /* Remove sticky positioning and shadows on desktop */
+        .table-custom th:first-child,
+        .table-custom td:first-child {
+            position: static;
+            box-shadow: none;
+        }
+        
+        /* Hide scroll indicators on desktop */
+        .table-scroll-container::before,
+        .table-scroll-container::after {
+            display: none;
+        }
     }
 
-    .table-custom th:first-child,
-    .table-custom td:first-child {
-        min-width: 140px; /* Slightly wider for ISBN */
+    /* Mobile: Maintain horizontal scrolling */
+    @media (max-width: 768px) {
+        .table-custom th,
+        .table-custom td {
+            min-width: 120px;
+            white-space: nowrap;
+        }
+
+        .table-custom th:first-child,
+        .table-custom td:first-child {
+            min-width: 140px; /* Slightly wider for ISBN */
+        }
+
+        .table-custom th:last-child,
+        .table-custom td:last-child {
+            min-width: 160px; /* Wider for actions */
+        }
+        
+        /* Force table to be wider than mobile screen for scrolling */
+        .table-custom {
+            min-width: 1000px;
+        }
     }
 
-    .table-custom th:last-child,
-    .table-custom td:last-child {
-        min-width: 160px; /* Wider for actions */
-    }
-
-    /* Responsive */
+    /* Additional mobile responsive adjustments */
     @media (max-width: 768px) {
         .table-custom thead th,
         .table-custom tbody td {
@@ -441,11 +466,6 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
             width: 32px;
             height: 32px;
             padding: 0.4rem;
-        }
-
-        /* Ensure table takes full width and allows scrolling */
-        .table-custom {
-            min-width: 1000px; /* Force table to be wider than mobile screen */
         }
 
         /* Keep scroll indicators visible on mobile */
@@ -539,9 +559,6 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
                     @method('PATCH')
                     <input type="number" name="stock" value="{{ $stockValue }}" min="0" required class="stock-{{ $stockLevel }}">
                     <button type="submit"><i class="fas fa-save"></i></button>
-                    <div class="stock-indicator stock-{{ $stockLevel }}">
-                        <i class="fas fa-{{ $stockIcon }}"></i>
-                    </div>
                 </form>
             </td>
             <td>
