@@ -4,6 +4,14 @@
 <h5><i class="fas fa-plus me-2"></i>Create New Order</h5>
 <p class="text-muted">Add books to create a new stock application form</p>
 
+@if(!auth()->user()->isSalesperson() && !auth()->user()->isAdmin())
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Access Restricted:</strong> Only salespeople and administrators can create new orders. 
+    You can view existing orders in the other tabs.
+</div>
+@else
+
 <!-- Success/Error Messages -->
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -373,4 +381,5 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     });
 });
 </script>
+@endif
 @endsection

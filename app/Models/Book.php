@@ -75,22 +75,24 @@ class Book extends Model
      */
     protected static function createAuditLog($book, $action, $oldValues = null, $newValues = null)
     {
-        // Determine the source of the change
-        $userSource = 'web'; // Default to web
+        // Store user information - email and name for web users
+        $userSource = 'System'; // Default fallback
         $userIdentifier = null;
         
         if (Auth::check()) {
             $userIdentifier = Auth::user()->email;
+            $userSource = Auth::user()->name; // Store user name instead of "web"
         } elseif (request()->header('X-AppSheet-User')) {
-            // If the request comes from AppSheet
-            $userSource = 'appsheet';
+            // If the request comes from AppSheet (legacy support)
+            $userSource = 'AppSheet';
             $userIdentifier = request()->header('X-AppSheet-User');
         } elseif (request()->is('api/*')) {
             // If it's an API request
-            $userSource = 'api';
+            $userSource = 'API';
             $userIdentifier = request()->ip();
         } else {
             $userIdentifier = request()->ip();
+            $userSource = 'System';
         }
         
         AuditLog::create([
@@ -99,8 +101,8 @@ class Book extends Model
             'action' => $action,
             'old_values' => $oldValues,
             'new_values' => $newValues,
-            'user_source' => $userSource,
-            'user_identifier' => $userIdentifier
+            'user_source' => $userSource, // Now stores user name or source type
+            'user_identifier' => $userIdentifier // Still stores email or IP
         ]);
     }
     

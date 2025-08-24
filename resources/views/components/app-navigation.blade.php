@@ -14,7 +14,11 @@
                     Welcome, {{ auth()->user()->name }}
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                    @if(auth()->user()->isAdmin())
+                        <li><a class="dropdown-item" href="{{ route('users.index') }}"><i class="fas fa-users-cog me-2"></i>User Management</a></li>
+                    @else
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                    @endif
                     <li>
                         <hr class="dropdown-divider">
                     </li>

@@ -16,6 +16,8 @@ class OrderController extends Controller
      */
     public function create()
     {
+        // All authenticated users can view the page
+        // Authorization restriction is handled in the view with a friendly message
         return view('orders.create');
     }
 
@@ -87,6 +89,17 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
+        // Only salesperson and admin can create orders
+        if (!Auth::user()->isSalesperson() && !Auth::user()->isAdmin()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied. Only salespeople and admins can create orders.'
+                ], 403);
+            }
+            abort(403, 'Access denied. Only salespeople and admins can create orders.');
+        }
+        
         $request->validate([
             'purpose' => 'nullable|string|max:1000',
             'platform' => 'required|string|max:255',

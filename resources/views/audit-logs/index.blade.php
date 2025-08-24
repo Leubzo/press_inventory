@@ -518,12 +518,12 @@
 
                     <div class="meta-info">
                         <div class="meta-item">
-                            <i class="fas fa-user"></i>
+                            <i class="fas fa-envelope"></i>
                             <span>{{ $log->user_identifier ?? 'System' }}</span>
                         </div>
                         <div class="meta-item">
-                            <i class="fas fa-desktop"></i>
-                            <span>{{ ucfirst($log->user_source) }}</span>
+                            <i class="fas fa-user"></i>
+                            <span>{{ $log->user_source ?? 'Unknown' }}</span>
                         </div>
                         <div class="meta-item">
                             <i class="fas fa-calendar"></i>
