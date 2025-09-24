@@ -89,29 +89,13 @@ class ReportsController extends Controller
     public function exportInventory(Request $request)
     {
         $data = $this->getInventoryData($request);
-        $format = $request->get('format', 'csv');
-        
-        if ($format === 'csv') {
-            return $this->exportInventoryCsv($data);
-        } elseif ($format === 'pdf') {
-            return $this->exportInventoryPdf($data);
-        }
-        
-        return redirect()->back()->with('error', 'Invalid export format');
+        return $this->exportInventoryCsv($data);
     }
-    
+
     public function exportSales(Request $request)
     {
         $data = $this->getSalesData($request);
-        $format = $request->get('format', 'csv');
-        
-        if ($format === 'csv') {
-            return $this->exportSalesCsv($data);
-        } elseif ($format === 'pdf') {
-            return $this->exportSalesPdf($data);
-        }
-        
-        return redirect()->back()->with('error', 'Invalid export format');
+        return $this->exportSalesCsv($data);
     }
     
     public function trendsData(Request $request)
@@ -144,18 +128,24 @@ class ReportsController extends Controller
     private function getFilters(Request $request)
     {
         $timezone = 'Asia/Kuala_Lumpur';
-        $defaultFrom = Carbon::now($timezone)->subDays(30)->toDateString();
-        $defaultTo = Carbon::now($timezone)->toDateString();
-        
+        $now = Carbon::now($timezone);
+
+        // Set default to 1 week if no dates provided
+        $defaultFrom = $now->copy()->subWeek()->toDateString();
+        $defaultTo = $now->toDateString();
+
+        $dateFrom = $request->get('date_from', $defaultFrom);
+        $dateTo = $request->get('date_to', $defaultTo);
+
         return [
-            'date_from' => $request->get('date_from', $defaultFrom),
-            'date_to' => $request->get('date_to', $defaultTo),
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
             'category' => $request->get('category'),
-            'platform' => $request->get('platform'),
             'stock_level' => $request->get('stock_level'),
             'timezone' => $timezone
         ];
     }
+
     
     private function getInventoryData(Request $request)
     {
@@ -189,10 +179,10 @@ class ReportsController extends Controller
         $inventoryMetrics = $this->calculateInventoryMetrics($books);
         $stockDistribution = $this->calculateStockDistribution($books);
         $categoryAnalysis = $this->calculateCategoryAnalysis($books);
-        $valueAnalysis = $this->calculateValueAnalysis($books);
-        $alertsData = $this->calculateAlerts($books);
-        $deadStock = $this->calculateDeadStock($books, $filters);
-        
+
+        // NEW: Get inventory changes from AuditLog
+        $inventoryChanges = $this->getInventoryChanges($filters);
+
         return [
             'filters' => array_merge($filters, [
                 'available_categories' => Book::distinct('category')->whereNotNull('category')->pluck('category')->sort(),
@@ -206,17 +196,150 @@ class ReportsController extends Controller
             'metrics' => $inventoryMetrics,
             'stock_distribution' => $stockDistribution,
             'categories' => $categoryAnalysis,
-            'value_analysis' => $valueAnalysis,
-            'alerts' => $alertsData,
-            'dead_stock' => $deadStock,
+            'changes' => $inventoryChanges,
             'charts' => [
                 'stock_distribution' => $stockDistribution,
-                'category_values' => $categoryAnalysis->take(8),
-                'top_value_books' => $valueAnalysis['top_value_books']->take(10)
+                'category_values' => $categoryAnalysis->take(8)
             ]
         ];
     }
-    
+
+    private function getInventoryChanges($filters)
+    {
+        // Get audit logs for books in the date range
+        $auditQuery = AuditLog::where('table_name', 'books')
+            ->whereBetween('created_at', [
+                Carbon::parse($filters['date_from'], $filters['timezone'])->startOfDay(),
+                Carbon::parse($filters['date_to'], $filters['timezone'])->endOfDay()
+            ])
+            ->with('book');
+
+        $auditLogs = $auditQuery->get();
+
+        // Separate into different types of changes
+        $booksAdded = $auditLogs->where('action', 'created');
+        $booksDeleted = $auditLogs->where('action', 'deleted');
+        $stockChanges = $auditLogs->where('action', 'updated')
+            ->filter(function($log) {
+                return isset($log->old_values['stock']) && isset($log->new_values['stock']) &&
+                       $log->old_values['stock'] != $log->new_values['stock'];
+            });
+
+        // Calculate summaries
+        $totalStockIncrease = $stockChanges->sum(function($log) {
+            return ($log->new_values['stock'] ?? 0) - ($log->old_values['stock'] ?? 0);
+        });
+
+        return [
+            'summary' => [
+                'books_added' => $booksAdded->count(),
+                'books_deleted' => $booksDeleted->count(),
+                'stock_changes' => $stockChanges->count(),
+                'total_stock_change' => $totalStockIncrease
+            ],
+            'books_added' => $booksAdded->take(10)->map(function($log) {
+                return [
+                    'title' => $log->new_values['title'] ?? ($log->book->title ?? 'Unknown'),
+                    'isbn' => $log->new_values['isbn'] ?? ($log->book->isbn ?? 'N/A'),
+                    'initial_stock' => $log->new_values['stock'] ?? 0,
+                    'date' => $log->created_at->format('M d, Y H:i')
+                ];
+            }),
+            'books_deleted' => $booksDeleted->take(10)->map(function($log) {
+                return [
+                    'title' => $log->old_values['title'] ?? 'Unknown',
+                    'isbn' => $log->old_values['isbn'] ?? 'N/A',
+                    'final_stock' => $log->old_values['stock'] ?? 0,
+                    'date' => $log->created_at->format('M d, Y H:i')
+                ];
+            }),
+            'stock_changes' => $stockChanges->take(10)->map(function($log) {
+                $oldStock = $log->old_values['stock'] ?? 0;
+                $newStock = $log->new_values['stock'] ?? 0;
+                $change = $newStock - $oldStock;
+
+                return [
+                    'title' => $log->new_values['title'] ?? ($log->old_values['title'] ?? ($log->book->title ?? 'Unknown')),
+                    'isbn' => $log->new_values['isbn'] ?? ($log->old_values['isbn'] ?? ($log->book->isbn ?? 'N/A')),
+                    'old_stock' => $oldStock,
+                    'new_stock' => $newStock,
+                    'change' => $change,
+                    'change_type' => $change > 0 ? 'increase' : 'decrease',
+                    'date' => $log->created_at->format('M d, Y H:i')
+                ];
+            })->sortByDesc('change')
+        ];
+    }
+
+    private function getSalesChanges($filters)
+    {
+        // Get orders created, approved, and fulfilled in the date range
+        $ordersCreated = Order::with(['requester', 'orderItems.book'])
+            ->whereBetween('created_at', [
+                Carbon::parse($filters['date_from'], $filters['timezone'])->startOfDay(),
+                Carbon::parse($filters['date_to'], $filters['timezone'])->endOfDay()
+            ])
+            ->orderBy('created_at', 'desc')
+            ->take(20)
+            ->get();
+
+        $ordersApproved = Order::with(['approver', 'orderItems.book'])
+            ->whereNotNull('approval_date')
+            ->whereBetween('approval_date', [
+                Carbon::parse($filters['date_from'], $filters['timezone'])->startOfDay(),
+                Carbon::parse($filters['date_to'], $filters['timezone'])->endOfDay()
+            ])
+            ->orderBy('approval_date', 'desc')
+            ->take(20)
+            ->get();
+
+        $ordersFulfilled = Order::with(['fulfiller', 'orderItems.book'])
+            ->where('status', 'fulfilled')
+            ->whereNotNull('fulfillment_date')
+            ->whereBetween('fulfillment_date', [
+                Carbon::parse($filters['date_from'], $filters['timezone'])->startOfDay(),
+                Carbon::parse($filters['date_to'], $filters['timezone'])->endOfDay()
+            ])
+            ->orderBy('fulfillment_date', 'desc')
+            ->take(20)
+            ->get();
+
+        return [
+            'summary' => [
+                'orders_created' => $ordersCreated->count(),
+                'orders_approved' => $ordersApproved->count(),
+                'orders_fulfilled' => $ordersFulfilled->count(),
+                'total_revenue' => $ordersFulfilled->sum(function($order) {
+                    return $order->orderItems->sum(function($item) {
+                        return $item->unit_price * ($item->quantity_fulfilled ?? 0);
+                    });
+                })
+            ],
+            'orders_created' => $ordersCreated->map(function($order) {
+                return [
+                    'order_number' => $order->order_number,
+                    'requester_name' => $order->requester->name ?? 'Unknown',
+                    'items_count' => $order->orderItems->count(),
+                    'status' => $order->status,
+                    'date' => $order->created_at->format('M d, Y H:i')
+                ];
+            }),
+            'orders_fulfilled' => $ordersFulfilled->map(function($order) {
+                $totalValue = $order->orderItems->sum(function($item) {
+                    return $item->unit_price * ($item->quantity_fulfilled ?? 0);
+                });
+
+                return [
+                    'order_number' => $order->order_number,
+                    'fulfiller_name' => $order->fulfiller->name ?? 'Unknown',
+                    'items_count' => $order->orderItems->count(),
+                    'total_value' => $totalValue,
+                    'date' => $order->fulfillment_date->format('M d, Y H:i')
+                ];
+            })
+        ];
+    }
+
     private function getSalesData(Request $request)
     {
         $filters = $this->getFilters($request);
@@ -227,43 +350,69 @@ class ReportsController extends Controller
                 Carbon::parse($filters['date_from'], $filters['timezone'])->startOfDay(),
                 Carbon::parse($filters['date_to'], $filters['timezone'])->endOfDay()
             ]);
-            
-        if ($filters['platform']) {
-            $ordersQuery->where('platform', $filters['platform']);
-        }
-        
+
         if ($filters['category']) {
             $ordersQuery->whereHas('orderItems.book', function($query) use ($filters) {
                 $query->where('category', $filters['category']);
             });
         }
-        
+
         $orders = $ordersQuery->get();
-        
-        $salesMetrics = $this->calculateSalesMetrics($orders);
-        $platformAnalysis = $this->calculatePlatformAnalysis($orders);
+
+        $salesMetrics = $this->calculateSimpleSalesMetrics($orders);
         $bestSellers = $this->calculateBestSellers($orders);
-        $salesTrends = $this->calculateSalesTrends($orders, $filters);
-        $recentOrders = $orders->sortByDesc('fulfillment_date')->take(10);
-        
+
+        // Chart data
+        $salesTrend = $this->calculateSalesTrend($orders, $filters);
+        $categorySales = $this->calculateCategorySales($orders);
+
+        // Get sales changes and paginate
+        $salesChanges = $this->getSalesChanges($filters);
+
+        // Paginate best sellers (10 per page)
+        $bestSellersPage = $request->get('best_sellers_page', 1);
+        $perPage = 10;
+        $bestSellersPaginated = $this->paginateCollection($bestSellers, $perPage, $bestSellersPage, 'best_sellers_page');
+
         return [
             'filters' => array_merge($filters, [
-                'available_categories' => Book::distinct('category')->whereNotNull('category')->pluck('category')->sort(),
-                'available_platforms' => Order::distinct('platform')->whereNotNull('platform')->pluck('platform')->sort()
+                'available_categories' => Book::distinct('category')->whereNotNull('category')->pluck('category')->sort()
             ]),
             'metrics' => $salesMetrics,
-            'platforms' => $platformAnalysis,
-            'best_sellers' => $bestSellers,
-            'trends' => $salesTrends,
-            'recent_orders' => $recentOrders,
+            'best_sellers' => $bestSellersPaginated,
+            'sales_changes' => $salesChanges,
             'charts' => [
-                'platform_performance' => $platformAnalysis,
-                'best_sellers_chart' => $bestSellers->take(8),
-                'sales_trends' => $salesTrends['daily_sales']
+                'sales_trend' => $salesTrend,
+                'category_sales' => $categorySales
             ]
         ];
     }
-    
+
+    private function calculateSimpleSalesMetrics($orders)
+    {
+        $totalRevenue = 0;
+        $totalQuantity = 0;
+        $totalItems = 0;
+
+        foreach ($orders as $order) {
+            foreach ($order->orderItems as $item) {
+                $fulfilledQty = $item->quantity_fulfilled ?? 0;
+                $totalRevenue += $item->unit_price * $fulfilledQty;
+                $totalQuantity += $fulfilledQty;
+                $totalItems++;
+            }
+        }
+
+        return [
+            'total_orders' => $orders->count(),
+            'total_revenue' => $totalRevenue,
+            'total_quantity' => $totalQuantity,
+            'total_items' => $totalItems,
+            'avg_order_value' => $orders->count() > 0 ? $totalRevenue / $orders->count() : 0,
+            'avg_items_per_order' => $orders->count() > 0 ? $totalItems / $orders->count() : 0
+        ];
+    }
+
     private function calculateInventoryMetrics($books)
     {
         $totalValue = $books->sum(function($book) {
@@ -628,39 +777,74 @@ class ReportsController extends Controller
             fputcsv($file, ['Total Books', number_format($data['metrics']['total_books'])]);
             fputcsv($file, ['Total Stock', number_format($data['metrics']['total_stock'])]);
             fputcsv($file, ['Total Value (RM)', number_format($data['metrics']['total_value'], 2)]);
+            fputcsv($file, ['Unique Categories', $data['metrics']['unique_categories']]);
             fputcsv($file, ['Out of Stock', $data['metrics']['out_of_stock']]);
             fputcsv($file, ['Low Stock', $data['metrics']['low_stock']]);
+            fputcsv($file, ['Average Value per Book (RM)', number_format($data['metrics']['avg_value_per_book'], 2)]);
+            fputcsv($file, ['Average Stock per Book', number_format($data['metrics']['avg_stock_per_book'], 1)]);
+            fputcsv($file, []);
+
+            // Add stock distribution
+            fputcsv($file, ['=== STOCK DISTRIBUTION ===']);
+            fputcsv($file, ['Out of Stock (0)', $data['stock_distribution']['out_of_stock']]);
+            fputcsv($file, ['Low Stock (1-10)', $data['stock_distribution']['low_stock']]);
+            fputcsv($file, ['Medium Stock (11-50)', $data['stock_distribution']['medium_stock']]);
+            fputcsv($file, ['High Stock (50+)', $data['stock_distribution']['high_stock']]);
             fputcsv($file, []);
             
+            // Add inventory changes section
+            fputcsv($file, ['=== INVENTORY CHANGES ===']);
+            fputcsv($file, ['Books Added', $data['changes']['summary']['books_added']]);
+            fputcsv($file, ['Books Deleted', $data['changes']['summary']['books_deleted']]);
+            fputcsv($file, ['Stock Changes', $data['changes']['summary']['stock_changes']]);
+            fputcsv($file, ['Total Stock Change', $data['changes']['summary']['total_stock_change']]);
+            fputcsv($file, []);
+
+            if (!$data['changes']['books_added']->isEmpty()) {
+                fputcsv($file, ['=== BOOKS ADDED ===']);
+                fputcsv($file, ['Title', 'ISBN', 'Initial Stock', 'Date Added']);
+                foreach ($data['changes']['books_added'] as $book) {
+                    fputcsv($file, [
+                        $book['title'],
+                        $book['isbn'],
+                        $book['initial_stock'],
+                        $book['date']
+                    ]);
+                }
+                fputcsv($file, []);
+            }
+
+            if (!$data['changes']['stock_changes']->isEmpty()) {
+                fputcsv($file, ['=== STOCK CHANGES ===']);
+                fputcsv($file, ['Title', 'ISBN', 'Old Stock', 'New Stock', 'Change', 'Date']);
+                foreach ($data['changes']['stock_changes'] as $change) {
+                    fputcsv($file, [
+                        $change['title'],
+                        $change['isbn'],
+                        $change['old_stock'],
+                        $change['new_stock'],
+                        ($change['change'] > 0 ? '+' : '') . $change['change'],
+                        $change['date']
+                    ]);
+                }
+                fputcsv($file, []);
+            }
+
             fputcsv($file, ['=== CATEGORY ANALYSIS ===']);
-            fputcsv($file, ['Category', 'Books', 'Stock', 'Avg Price', 'Total Value', 'Out of Stock']);
+            fputcsv($file, ['Category', 'Books', 'Stock', 'Total Value (RM)', 'Avg Price (RM)', 'Out of Stock', 'Low Stock', 'Performance %']);
             foreach ($data['categories'] as $category) {
                 fputcsv($file, [
                     $category['name'],
                     $category['books_count'],
                     number_format($category['total_stock']),
-                    number_format($category['avg_price'], 2),
                     number_format($category['total_value'], 2),
-                    $category['out_of_stock_count']
+                    number_format($category['avg_price'], 2),
+                    $category['out_of_stock_count'],
+                    $category['low_stock_count'],
+                    number_format($category['total_value'] / max($data['categories']->max('total_value'), 1) * 100, 1)
                 ]);
             }
-            fputcsv($file, []);
-            
-            if ($data['alerts']['total_alerts'] > 0) {
-                fputcsv($file, ['=== STOCK ALERTS ===']);
-                fputcsv($file, ['Book Title', 'ISBN', 'Category', 'Current Stock', 'Status']);
-                
-                foreach ($data['alerts']['out_of_stock'] as $book) {
-                    fputcsv($file, [$book->title, $book->isbn, $book->category ?: 'Uncategorized', $book->stock, 'OUT OF STOCK']);
-                }
-                
-                foreach ($data['alerts']['low_stock'] as $book) {
-                    fputcsv($file, [$book->title, $book->isbn, $book->category ?: 'Uncategorized', $book->stock, 'LOW STOCK']);
-                }
-                
-                fputcsv($file, []);
-            }
-            
+
             fclose($file);
         }, 200, $headers);
     }
@@ -684,9 +868,6 @@ class ReportsController extends Controller
             if ($data['filters']['category']) {
                 fputcsv($file, ['Category: ' . $data['filters']['category']]);
             }
-            if ($data['filters']['platform']) {
-                fputcsv($file, ['Platform: ' . $data['filters']['platform']]);
-            }
             
             fputcsv($file, []);
             
@@ -695,23 +876,50 @@ class ReportsController extends Controller
             fputcsv($file, ['Total Revenue (RM)', number_format($data['metrics']['total_revenue'], 2)]);
             fputcsv($file, ['Total Books Sold', number_format($data['metrics']['total_quantity'])]);
             fputcsv($file, ['Average Order Value (RM)', number_format($data['metrics']['avg_order_value'], 2)]);
+            fputcsv($file, ['Total Items', number_format($data['metrics']['total_items'])]);
+            fputcsv($file, ['Average Items per Order', number_format($data['metrics']['avg_items_per_order'], 1)]);
             fputcsv($file, []);
-            
-            if ($data['platforms']->count() > 0) {
-                fputcsv($file, ['=== PLATFORM PERFORMANCE ===']);
-                fputcsv($file, ['Platform', 'Orders', 'Revenue (RM)', 'Books Sold', 'Market Share %']);
-                foreach ($data['platforms'] as $platform) {
+
+            // Add sales activities section
+            fputcsv($file, ['=== SALES ACTIVITIES ===']);
+            fputcsv($file, ['Orders Created', $data['sales_changes']['summary']['orders_created']]);
+            fputcsv($file, ['Orders Approved', $data['sales_changes']['summary']['orders_approved']]);
+            fputcsv($file, ['Orders Fulfilled', $data['sales_changes']['summary']['orders_fulfilled']]);
+            fputcsv($file, ['Total Revenue (Period)', 'RM ' . number_format($data['sales_changes']['summary']['total_revenue'], 2)]);
+            fputcsv($file, []);
+
+            // Add sales trend data
+            if (isset($data['charts']['sales_trend']) && $data['charts']['sales_trend']->count() > 0) {
+                $trendData = $data['charts']['sales_trend'];
+                $dataType = $trendData->first()['type'] ?? 'daily';
+
+                fputcsv($file, ['=== SALES TREND (' . strtoupper($dataType) . ') ===']);
+                fputcsv($file, ['Date', 'Revenue (RM)', 'Orders']);
+                foreach ($trendData as $trend) {
                     fputcsv($file, [
-                        $platform['platform'],
-                        number_format($platform['total_orders']),
-                        number_format($platform['total_revenue'], 2),
-                        number_format($platform['total_quantity']),
-                        number_format($platform['market_share'], 1)
+                        $trend['date'],
+                        number_format($trend['revenue'], 2),
+                        $trend['orders']
                     ]);
                 }
                 fputcsv($file, []);
             }
-            
+
+            // Add category sales performance
+            if (isset($data['charts']['category_sales']) && $data['charts']['category_sales']->count() > 0) {
+                fputcsv($file, ['=== CATEGORY SALES PERFORMANCE ===']);
+                fputcsv($file, ['Category', 'Revenue (RM)', 'Quantity Sold', 'Orders']);
+                foreach ($data['charts']['category_sales'] as $category) {
+                    fputcsv($file, [
+                        $category['category'],
+                        number_format($category['revenue'], 2),
+                        number_format($category['quantity']),
+                        $category['orders']
+                    ]);
+                }
+                fputcsv($file, []);
+            }
+
             if ($data['best_sellers']->count() > 0) {
                 fputcsv($file, ['=== BEST SELLING BOOKS ===']);
                 fputcsv($file, ['Book Title', 'Category', 'Quantity Sold', 'Revenue (RM)', 'Orders']);
@@ -724,19 +932,171 @@ class ReportsController extends Controller
                         $book['orders_count']
                     ]);
                 }
+                fputcsv($file, []);
             }
             
             fclose($file);
         }, 200, $headers);
     }
-    
-    private function exportInventoryPdf($data)
+
+    /**
+     * Paginate a collection manually
+     */
+    private function paginateCollection($collection, $perPage, $currentPage, $pageName = 'page')
     {
-        return redirect()->back()->with('error', 'PDF export not implemented yet');
+        $currentPageResults = $collection->forPage($currentPage, $perPage);
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentPageResults->values(),
+            $collection->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => request()->url(),
+                'pageName' => $pageName,
+                'query' => request()->except($pageName)
+            ]
+        );
     }
-    
-    private function exportSalesPdf($data)
+
+    private function calculateSalesTrend($orders, $filters)
     {
-        return redirect()->back()->with('error', 'PDF export not implemented yet');
+        $startDate = Carbon::parse($filters['date_from']);
+        $endDate = Carbon::parse($filters['date_to']);
+        $daysDiff = $startDate->diffInDays($endDate);
+
+        // Determine aggregation level based on date range
+        if ($daysDiff <= 14) {
+            // Daily data for 2 weeks or less
+            return $this->getDailySalesData($orders, $startDate, $endDate);
+        } elseif ($daysDiff <= 90) {
+            // Weekly data for 3 months or less
+            return $this->getWeeklySalesData($orders, $startDate, $endDate);
+        } else {
+            // Monthly data for longer periods
+            return $this->getMonthlySalesData($orders, $startDate, $endDate);
+        }
+    }
+
+    private function getDailySalesData($orders, $startDate, $endDate)
+    {
+        $salesByDate = [];
+
+        foreach ($orders as $order) {
+            $date = $order->fulfillment_date->format('Y-m-d');
+            $revenue = 0;
+
+            foreach ($order->orderItems as $item) {
+                $revenue += $item->unit_price * ($item->quantity_fulfilled ?? 0);
+            }
+
+            if (!isset($salesByDate[$date])) {
+                $salesByDate[$date] = ['date' => $date, 'revenue' => 0, 'orders' => 0, 'type' => 'daily'];
+            }
+
+            $salesByDate[$date]['revenue'] += $revenue;
+            $salesByDate[$date]['orders']++;
+        }
+
+        // Fill in missing dates with zero values
+        $result = [];
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $dateStr = $date->format('Y-m-d');
+            $result[] = $salesByDate[$dateStr] ?? ['date' => $dateStr, 'revenue' => 0, 'orders' => 0, 'type' => 'daily'];
+        }
+
+        return collect($result);
+    }
+
+    private function getWeeklySalesData($orders, $startDate, $endDate)
+    {
+        $salesByWeek = [];
+
+        foreach ($orders as $order) {
+            $weekStart = $order->fulfillment_date->startOfWeek()->format('Y-m-d');
+            $revenue = 0;
+
+            foreach ($order->orderItems as $item) {
+                $revenue += $item->unit_price * ($item->quantity_fulfilled ?? 0);
+            }
+
+            if (!isset($salesByWeek[$weekStart])) {
+                $salesByWeek[$weekStart] = ['date' => $weekStart, 'revenue' => 0, 'orders' => 0, 'type' => 'weekly'];
+            }
+
+            $salesByWeek[$weekStart]['revenue'] += $revenue;
+            $salesByWeek[$weekStart]['orders']++;
+        }
+
+        // Fill in missing weeks
+        $result = [];
+        $current = $startDate->copy()->startOfWeek();
+        while ($current->lte($endDate)) {
+            $weekStr = $current->format('Y-m-d');
+            $result[] = $salesByWeek[$weekStr] ?? ['date' => $weekStr, 'revenue' => 0, 'orders' => 0, 'type' => 'weekly'];
+            $current->addWeek();
+        }
+
+        return collect($result);
+    }
+
+    private function getMonthlySalesData($orders, $startDate, $endDate)
+    {
+        $salesByMonth = [];
+
+        foreach ($orders as $order) {
+            $monthStart = $order->fulfillment_date->startOfMonth()->format('Y-m-d');
+            $revenue = 0;
+
+            foreach ($order->orderItems as $item) {
+                $revenue += $item->unit_price * ($item->quantity_fulfilled ?? 0);
+            }
+
+            if (!isset($salesByMonth[$monthStart])) {
+                $salesByMonth[$monthStart] = ['date' => $monthStart, 'revenue' => 0, 'orders' => 0, 'type' => 'monthly'];
+            }
+
+            $salesByMonth[$monthStart]['revenue'] += $revenue;
+            $salesByMonth[$monthStart]['orders']++;
+        }
+
+        // Fill in missing months
+        $result = [];
+        $current = $startDate->copy()->startOfMonth();
+        while ($current->lte($endDate)) {
+            $monthStr = $current->format('Y-m-d');
+            $result[] = $salesByMonth[$monthStr] ?? ['date' => $monthStr, 'revenue' => 0, 'orders' => 0, 'type' => 'monthly'];
+            $current->addMonth();
+        }
+
+        return collect($result);
+    }
+
+    private function calculateCategorySales($orders)
+    {
+        $categorySales = [];
+
+        foreach ($orders as $order) {
+            foreach ($order->orderItems as $item) {
+                $category = $item->book->category ?? 'Uncategorized';
+                $revenue = $item->unit_price * ($item->quantity_fulfilled ?? 0);
+                $quantity = $item->quantity_fulfilled ?? 0;
+
+                if (!isset($categorySales[$category])) {
+                    $categorySales[$category] = [
+                        'category' => $category,
+                        'revenue' => 0,
+                        'quantity' => 0,
+                        'orders' => 0
+                    ];
+                }
+
+                $categorySales[$category]['revenue'] += $revenue;
+                $categorySales[$category]['quantity'] += $quantity;
+                $categorySales[$category]['orders']++;
+            }
+        }
+
+        return collect($categorySales)->sortByDesc('revenue')->values();
     }
 }

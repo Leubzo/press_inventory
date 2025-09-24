@@ -1,22 +1,40 @@
 @extends('reports.layout')
 
 @section('page-content')
-<!-- Advanced Sales Filters -->
+<!-- Time Period Filters -->
 <div class="stats-card sales">
-    <h5><i class="fas fa-filter me-2"></i>Sales Analytics Filters</h5>
+    <h5><i class="fas fa-calendar me-2"></i>Time Period</h5>
     <form method="GET" action="{{ route('reports.sales') }}" id="salesFiltersForm">
+        <!-- Date Range -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="date_from" class="form-label fw-semibold">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ $data['filters']['date_from'] }}">
+            </div>
+            <div class="col-md-6">
+                <label for="date_to" class="form-label fw-semibold">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ $data['filters']['date_to'] }}">
+            </div>
+        </div>
+
+        <!-- Quick Date Presets -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <label class="form-label fw-semibold">Quick Select:</label>
+                <div class="btn-group flex-wrap" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setSalesDateRange('today')">Today</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setSalesDateRange('7_days')">7 Days</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setSalesDateRange('1_month')">1 Month</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setSalesDateRange('3_months')">3 Months</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setSalesDateRange('6_months')">6 Months</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setSalesDateRange('1_year')">1 Year</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Filters -->
         <div class="row g-3">
-            <div class="col-md-2">
-                <label for="sales_date_from" class="form-label fw-semibold">Date From</label>
-                <input type="date" class="form-control" id="sales_date_from" name="date_from" 
-                       value="{{ $data['filters']['date_from'] }}">
-            </div>
-            <div class="col-md-2">
-                <label for="sales_date_to" class="form-label fw-semibold">Date To</label>
-                <input type="date" class="form-control" id="sales_date_to" name="date_to" 
-                       value="{{ $data['filters']['date_to'] }}">
-            </div>
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <label for="sales_category" class="form-label fw-semibold">Category</label>
                 <select class="form-select" id="sales_category" name="category">
                     <option value="">All Categories</option>
@@ -27,41 +45,18 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <label for="platform" class="form-label fw-semibold">Platform</label>
-                <select class="form-select" id="platform" name="platform">
-                    <option value="">All Platforms</option>
-                    @foreach($data['filters']['available_platforms'] as $platform)
-                        <option value="{{ $platform }}" {{ $data['filters']['platform'] == $platform ? 'selected' : '' }}>
-                            {{ $platform }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-8">
                 <label class="form-label">&nbsp;</label>
-                <div class="d-flex gap-2 flex-wrap">
+                <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-filter me-1"></i>Apply Filters
                     </button>
                     <a href="{{ route('reports.sales') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-times me-1"></i>Clear All
                     </a>
-                    <div class="ms-auto">
-                        <div class="dropdown">
-                            <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-download me-1"></i>Export
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="exportSales('csv')">
-                                    <i class="fas fa-file-csv me-2"></i>Export as CSV
-                                </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportSales('pdf')">
-                                    <i class="fas fa-file-pdf me-2"></i>Export as PDF
-                                </a></li>
-                            </ul>
-                        </div>
-                    </div>
+                    <a href="{{ route('reports.export.sales', request()->query()) }}" class="btn btn-success">
+                        <i class="fas fa-file-csv me-1"></i>Export CSV
+                    </a>
                 </div>
             </div>
         </div>
@@ -127,248 +122,231 @@
             </div>
             <div class="metric-item">
                 <div>
-                    <div class="metric-label">Unique Books</div>
-                    <div class="metric-value">{{ $data['metrics']['unique_books_sold'] }}</div>
+                    <div class="metric-label">Total Items</div>
+                    <div class="metric-value">{{ number_format($data['metrics']['total_items']) }}</div>
                 </div>
                 <i class="fas fa-layer-group fa-2x text-secondary opacity-50"></i>
             </div>
             <div class="metric-item">
                 <div>
-                    <div class="metric-label">Platforms Used</div>
-                    <div class="metric-value">{{ $data['metrics']['platforms_used'] }}</div>
-                </div>
-                <i class="fas fa-store fa-2x text-info opacity-50"></i>
-            </div>
-            <div class="metric-item">
-                <div>
-                    <div class="metric-label">Avg Books/Order</div>
-                    <div class="metric-value">{{ number_format($data['metrics']['avg_books_per_order'], 1) }}</div>
+                    <div class="metric-label">Avg Items/Order</div>
+                    <div class="metric-value">{{ number_format($data['metrics']['avg_items_per_order'], 1) }}</div>
                 </div>
                 <i class="fas fa-chart-bar fa-2x text-primary opacity-50"></i>
             </div>
-            <div class="metric-item">
-                <div>
-                    <div class="metric-label">Fulfillment Rate</div>
-                    <div class="metric-value text-success">{{ number_format($data['metrics']['fulfillment_rate'], 1) }}%</div>
-                </div>
-                <i class="fas fa-check-circle fa-2x text-success opacity-50"></i>
-            </div>
         </div>
     </div>
 
-    <!-- Sales Trends Analysis -->
-    @if($data['trends']['total_days'] > 1)
-    <div class="stats-card sales">
-        <h5><i class="fas fa-chart-area me-2"></i>Sales Trends Analysis</h5>
-        <div class="row">
-            <div class="col-md-8">
-                <div class="chart-container">
-                    <canvas id="salesTrendsChart"></canvas>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="metric-grid">
-                    <div class="metric-item">
-                        <div>
-                            <div class="metric-label">Peak Day Revenue</div>
-                            <div class="metric-value">RM {{ number_format($data['trends']['peak_day']['revenue'] ?? 0, 2) }}</div>
-                        </div>
-                    </div>
-                    <div class="metric-item">
-                        <div>
-                            <div class="metric-label">Avg Daily Revenue</div>
-                            <div class="metric-value">RM {{ number_format($data['trends']['avg_daily_revenue'], 2) }}</div>
-                        </div>
-                    </div>
-                    <div class="metric-item">
-                        <div>
-                            <div class="metric-label">Active Sales Days</div>
-                            <div class="metric-value">{{ $data['trends']['total_days'] }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 
-    <!-- Platform Performance Analysis -->
-    @if($data['platforms']->count() > 0)
-        <div class="stats-card sales">
-            <h5><i class="fas fa-store me-2"></i>Platform Performance Analysis</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="chart-container">
-                        <canvas id="platformPerformanceChart"></canvas>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="table-container">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Platform</th>
-                                    <th>Orders</th>
-                                    <th>Revenue (RM)</th>
-                                    <th>Market Share</th>
-                                    <th>Efficiency</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($data['platforms'] as $platform)
-                                    <tr>
-                                        <td>
-                                            <strong>{{ $platform['platform'] }}</strong>
-                                        </td>
-                                        <td>{{ number_format($platform['total_orders']) }}</td>
-                                        <td class="fw-bold">{{ number_format($platform['total_revenue'], 2) }}</td>
-                                        <td>
-                                            <div class="progress" style="height: 6px;">
-                                                <div class="progress-bar bg-primary" style="width: {{ $platform['market_share'] }}%"></div>
-                                            </div>
-                                            <small>{{ number_format($platform['market_share'], 1) }}%</small>
-                                        </td>
-                                        <td>
-                                            <span class="badge {{ $platform['efficiency_score'] > $data['metrics']['avg_order_value'] ? 'bg-success' : 'bg-warning' }}">
-                                                RM {{ number_format($platform['efficiency_score'], 0) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
 
     <!-- Best Selling Books -->
     @if($data['best_sellers']->count() > 0)
         <div class="stats-card sales">
             <h5><i class="fas fa-trophy me-2"></i>Best Selling Books</h5>
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="chart-container">
-                        <canvas id="bestSellersChart"></canvas>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="table-container">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Book</th>
-                                    <th>Sold</th>
-                                    <th>Revenue</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($data['best_sellers']->take(8) as $index => $bookSale)
-                                    <tr>
-                                        <td>
-                                            <strong>{{ Str::limit($bookSale['book']->title, 20) }}</strong><br>
-                                            <small class="text-muted">{{ $bookSale['book']->category ?: 'Uncategorized' }}</small>
-                                        </td>
-                                        <td class="fw-bold">{{ number_format($bookSale['total_quantity']) }}</td>
-                                        <td class="fw-bold">{{ number_format($bookSale['total_revenue'], 2) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    <!-- Detailed Best Sellers Table -->
-    <div class="stats-card sales">
-        <h5><i class="fas fa-list me-2"></i>Detailed Sales Performance</h5>
-        <div class="table-container">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Book Title</th>
-                        <th>Category</th>
-                        <th>Quantity Sold</th>
-                        <th>Orders</th>
-                        <th>Total Revenue (RM)</th>
-                        <th>Avg Sale Price (RM)</th>
-                        <th>Velocity Score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($data['best_sellers'] as $index => $bookSale)
-                        <tr>
-                            <td>
-                                <strong>{{ $bookSale['book']->title }}</strong><br>
-                                <small class="text-muted">{{ $bookSale['book']->isbn }}</small>
-                            </td>
-                            <td>{{ $bookSale['book']->category ?: 'Uncategorized' }}</td>
-                            <td class="fw-bold">{{ number_format($bookSale['total_quantity']) }}</td>
-                            <td>{{ $bookSale['orders_count'] }}</td>
-                            <td class="fw-bold">{{ number_format($bookSale['total_revenue'], 2) }}</td>
-                            <td>{{ number_format($bookSale['avg_sale_price'], 2) }}</td>
-                            <td>
-                                <div class="progress" style="height: 6px;">
-                                    @php
-                                        $maxVelocity = $data['best_sellers']->max('velocity');
-                                        $velocityPercent = $maxVelocity > 0 ? ($bookSale['velocity'] / $maxVelocity) * 100 : 0;
-                                    @endphp
-                                    <div class="progress-bar bg-success" style="width: {{ $velocityPercent }}%"></div>
-                                </div>
-                                <small>{{ $bookSale['velocity'] }}</small>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Recent Orders -->
-    @if($data['recent_orders']->count() > 0)
-        <div class="stats-card sales">
-            <h5><i class="fas fa-clock me-2"></i>Recent Fulfilled Orders</h5>
             <div class="table-container">
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
-                            <th>Platform</th>
-                            <th>Items</th>
-                            <th>Total Value (RM)</th>
-                            <th>Fulfilled Date</th>
-                            <th>Performance</th>
+                            <th>Rank</th>
+                            <th>Book Title</th>
+                            <th>Category</th>
+                            <th>Quantity Sold</th>
+                            <th>Orders</th>
+                            <th>Revenue (RM)</th>
+                            <th>Avg Sale Price (RM)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($data['recent_orders'] as $order)
+                        @php
+                            $startRank = ($data['best_sellers']->currentPage() - 1) * $data['best_sellers']->perPage() + 1;
+                        @endphp
+                        @foreach($data['best_sellers'] as $index => $bookSale)
                             <tr>
                                 <td>
-                                    <strong>{{ $order->order_number }}</strong>
+                                    <div class="d-flex align-items-center">
+                                        @if($startRank + $index <= 3)
+                                            <i class="fas fa-medal {{ $startRank + $index == 1 ? 'text-warning' : ($startRank + $index == 2 ? 'text-secondary' : 'text-warning') }} me-2"></i>
+                                        @endif
+                                        <span class="fw-bold">{{ $startRank + $index }}</span>
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary">{{ $order->platform ?: 'Not Specified' }}</span>
+                                    <div>
+                                        <strong>{{ $bookSale['book']->title }}</strong><br>
+                                        <small class="text-muted">ISBN: {{ $bookSale['book']->isbn }}</small>
+                                    </div>
                                 </td>
-                                <td>{{ $order->orderItems->count() }} items</td>
-                                <td class="fw-bold">{{ number_format($order->total_value, 2) }}</td>
-                                <td>{{ $order->fulfillment_date->format('M d, Y H:i') }}</td>
                                 <td>
-                                    @if($order->total_value > $data['metrics']['avg_order_value'])
-                                        <span class="badge bg-success">Above Average</span>
-                                    @else
-                                        <span class="badge bg-secondary">Standard</span>
-                                    @endif
+                                    <span class="badge bg-light text-dark">{{ $bookSale['book']->category ?: 'Uncategorized' }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-primary">{{ number_format($bookSale['total_quantity']) }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ number_format($bookSale['orders_count']) }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success">{{ number_format($bookSale['total_revenue'], 2) }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ number_format($bookSale['avg_sale_price'], 2) }}</span>
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-center">
+                    {{ $data['best_sellers']->appends(request()->query())->links() }}
+                </div>
+            </div>
+        </div>
+    @else
+        <div class="stats-card sales">
+            <div class="text-center py-4">
+                <i class="fas fa-chart-line text-muted fa-3x mb-3"></i>
+                <h5 class="text-muted">No sales data available</h5>
+                <p class="text-muted">No sales found for the selected period.</p>
             </div>
         </div>
     @endif
+
+    <!-- Sales Activities -->
+    <div class="stats-card sales">
+        <h5><i class="fas fa-chart-line me-2"></i>Sales Activities</h5>
+        <div class="text-muted small mb-3">
+            <i class="fas fa-calendar me-1"></i>Filtering: {{ $data['filters']['date_from'] }} to {{ $data['filters']['date_to'] }}
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-item">
+                    <div>
+                        <div class="metric-label">Orders Created</div>
+                        <div class="metric-value text-info">{{ $data['sales_changes']['summary']['orders_created'] }}</div>
+                    </div>
+                    <i class="fas fa-plus-circle fa-2x text-info opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-item">
+                    <div>
+                        <div class="metric-label">Orders Approved</div>
+                        <div class="metric-value text-warning">{{ $data['sales_changes']['summary']['orders_approved'] }}</div>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x text-warning opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-item">
+                    <div>
+                        <div class="metric-label">Orders Fulfilled</div>
+                        <div class="metric-value text-success">{{ $data['sales_changes']['summary']['orders_fulfilled'] }}</div>
+                    </div>
+                    <i class="fas fa-shipping-fast fa-2x text-success opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-item">
+                    <div>
+                        <div class="metric-label">Total Revenue</div>
+                        <div class="metric-value text-success">RM {{ number_format($data['sales_changes']['summary']['total_revenue'], 2) }}</div>
+                    </div>
+                    <i class="fas fa-dollar-sign fa-2x text-success opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        @if(!$data['sales_changes']['orders_created']->isEmpty() || !$data['sales_changes']['orders_fulfilled']->isEmpty())
+        <div class="row">
+            @if(!$data['sales_changes']['orders_created']->isEmpty())
+            <div class="col-md-6">
+                <h6><i class="fas fa-plus me-2 text-info"></i>Recently Created Orders</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Requester</th>
+                                <th>Items</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($data['sales_changes']['orders_created']->take(5) as $order)
+                            <tr>
+                                <td class="font-monospace">{{ $order['order_number'] }}</td>
+                                <td>{{ \Str::limit($order['requester_name'], 20) }}</td>
+                                <td>{{ $order['items_count'] }}</td>
+                                <td>
+                                    <span class="badge bg-{{ $order['status'] == 'pending' ? 'warning' : ($order['status'] == 'approved' ? 'info' : 'success') }}">
+                                        {{ ucfirst($order['status']) }}
+                                    </span>
+                                </td>
+                                <td class="text-muted small">{{ $order['date'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
+            @if(!$data['sales_changes']['orders_fulfilled']->isEmpty())
+            <div class="col-md-6">
+                <h6><i class="fas fa-check me-2 text-success"></i>Recently Fulfilled Orders</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Fulfiller</th>
+                                <th>Items</th>
+                                <th>Value (RM)</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($data['sales_changes']['orders_fulfilled']->take(5) as $order)
+                            <tr>
+                                <td class="font-monospace">{{ $order['order_number'] }}</td>
+                                <td>{{ \Str::limit($order['fulfiller_name'], 20) }}</td>
+                                <td>{{ $order['items_count'] }}</td>
+                                <td class="fw-bold text-success">{{ number_format($order['total_value'], 2) }}</td>
+                                <td class="text-muted small">{{ $order['date'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
+    </div>
+
+    <!-- Sales Charts -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="stats-card sales">
+                <h5><i class="fas fa-chart-line me-2"></i>Sales Trend</h5>
+                <div class="chart-container">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stats-card sales">
+                <h5><i class="fas fa-chart-pie me-2"></i>Sales by Category</h5>
+                <div class="chart-container">
+                    <canvas id="categorySalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
 @else
     <!-- No Sales Data State -->
@@ -405,126 +383,138 @@ const salesColors = {
 
 @if($data['metrics']['total_orders'] > 0)
 
-// Sales Trends Chart
-@if($data['trends']['total_days'] > 1)
-const trendsCtx = document.getElementById('salesTrendsChart').getContext('2d');
-const trendsData = @json($data['trends']['daily_sales']);
+// Sales Trend Chart
+const salesTrendCtx = document.getElementById('salesTrendChart').getContext('2d');
+const salesTrendData = @json($data['charts']['sales_trend']->values());
 
-if (trendsData && Object.keys(trendsData).length > 0) {
-    const dates = Object.keys(trendsData).sort();
-    const revenues = dates.map(date => trendsData[date].revenue);
-    const quantities = dates.map(date => trendsData[date].quantity);
-    
-    new Chart(trendsCtx, {
-        type: 'line',
-        data: {
-            labels: dates.map(date => new Date(date).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' })),
-            datasets: [
-                {
-                    label: 'Daily Revenue (RM)',
-                    data: revenues,
-                    borderColor: salesColors.primary,
-                    backgroundColor: salesColors.primary + '20',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    yAxisID: 'y'
+// Determine chart configuration based on data type
+const dataType = salesTrendData.length > 0 ? salesTrendData[0].type : 'daily';
+const dataCount = salesTrendData.length;
+
+// Configure chart based on aggregation type
+const chartConfig = {
+    type: dataCount > 30 ? 'bar' : 'line',
+    data: {
+        labels: salesTrendData.map(item => {
+            const date = new Date(item.date);
+            switch(item.type) {
+                case 'daily':
+                    return date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+                case 'weekly':
+                    const endWeek = new Date(date);
+                    endWeek.setDate(endWeek.getDate() + 6);
+                    return date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }) + ' - ' +
+                           endWeek.toLocaleDateString('en-GB', { day: 'numeric' });
+                case 'monthly':
+                    return date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+                default:
+                    return date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+            }
+        }),
+        datasets: [{
+            label: dataType === 'daily' ? 'Daily Revenue (RM)' :
+                   dataType === 'weekly' ? 'Weekly Revenue (RM)' : 'Monthly Revenue (RM)',
+            data: salesTrendData.map(item => item.revenue),
+            borderColor: salesColors.primary,
+            backgroundColor: dataCount > 30 ? salesColors.primary : salesColors.primary + '20',
+            borderWidth: 3,
+            fill: dataCount <= 30,
+            tension: dataType === 'daily' ? 0.4 : 0.2,
+            pointBackgroundColor: salesColors.primary,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: dataCount > 50 ? 0 : dataCount > 30 ? 2 : 4,
+            pointHoverRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'RM ' + value.toLocaleString();
+                    }
                 },
-                {
-                    label: 'Books Sold',
-                    data: quantities,
-                    borderColor: salesColors.info,
-                    backgroundColor: salesColors.info + '20',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.4,
-                    yAxisID: 'y1'
+                grid: {
+                    color: 'rgba(0,0,0,0.05)'
                 }
-            ]
+            },
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    maxTicksLimit: dataCount > 30 ? 8 : dataCount > 15 ? 12 : undefined,
+                    maxRotation: dataType === 'weekly' ? 45 : 0
+                }
+            }
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            scales: {
-                x: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Date'
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    }
-                },
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    title: {
-                        display: true,
-                        text: 'Revenue (RM)'
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return 'RM ' + value.toLocaleString();
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    }
-                },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    title: {
-                        display: true,
-                        text: 'Books Sold'
-                    },
-                    grid: {
-                        drawOnChartArea: false,
-                    },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                align: 'start',
+                labels: {
+                    boxWidth: 12,
+                    padding: 10
                 }
             },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            if (context.datasetIndex === 0) {
-                                return 'Revenue: RM ' + context.parsed.y.toLocaleString();
-                            } else {
-                                return 'Books Sold: ' + context.parsed.y;
-                            }
+            tooltip: {
+                callbacks: {
+                    title: function(context) {
+                        const item = salesTrendData[context[0].dataIndex];
+                        const date = new Date(item.date);
+                        switch(item.type) {
+                            case 'daily':
+                                return date.toLocaleDateString('en-GB', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                });
+                            case 'weekly':
+                                const endWeek = new Date(date);
+                                endWeek.setDate(endWeek.getDate() + 6);
+                                return 'Week: ' + date.toLocaleDateString('en-GB') + ' - ' + endWeek.toLocaleDateString('en-GB');
+                            case 'monthly':
+                                return date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
                         }
+                    },
+                    label: function(context) {
+                        const item = salesTrendData[context.dataIndex];
+                        return [
+                            'Revenue: RM ' + context.parsed.y.toLocaleString(),
+                            'Orders: ' + item.orders
+                        ];
                     }
                 }
             }
         }
-    });
-}
-@endif
+    }
+};
 
-// Platform Performance Chart
-@if($data['platforms']->count() > 0)
-const platformCtx = document.getElementById('platformPerformanceChart').getContext('2d');
-const platformData = @json($data['platforms']->values());
+new Chart(salesTrendCtx, chartConfig);
 
-if (platformData && platformData.length > 0) {
-    new Chart(platformCtx, {
+// Category Sales Chart
+const categorySalesCtx = document.getElementById('categorySalesChart').getContext('2d');
+const categorySalesData = @json($data['charts']['category_sales']->take(6)->values());
+
+if (categorySalesData && categorySalesData.length > 0) {
+    new Chart(categorySalesCtx, {
         type: 'doughnut',
         data: {
-            labels: platformData.map(p => p.platform),
+            labels: categorySalesData.map(cat => cat.category),
             datasets: [{
-                data: platformData.map(p => p.total_revenue),
+                data: categorySalesData.map(cat => cat.revenue),
                 backgroundColor: [
                     salesColors.primary,
                     salesColors.secondary,
                     salesColors.success,
                     salesColors.warning,
+                    salesColors.danger,
                     salesColors.info
                 ],
                 borderWidth: 3,
@@ -557,67 +547,6 @@ if (platformData && platformData.length > 0) {
         }
     });
 }
-@endif
-
-// Best Sellers Chart
-@if($data['best_sellers']->count() > 0)
-const bestSellersCtx = document.getElementById('bestSellersChart').getContext('2d');
-const bestSellersData = @json($data['charts']['best_sellers_chart']->values());
-
-if (bestSellersData && bestSellersData.length > 0) {
-    new Chart(bestSellersCtx, {
-        type: 'bar',
-        data: {
-            labels: bestSellersData.map(book => {
-                return book.book.title.length > 20 ? book.book.title.substring(0, 20) + '...' : book.book.title;
-            }),
-            datasets: [{
-                label: 'Quantity Sold',
-                data: bestSellersData.map(book => book.total_quantity),
-                backgroundColor: salesColors.secondary,
-                borderColor: salesColors.primary,
-                borderWidth: 2,
-                borderRadius: 8,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Quantity Sold'
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    }
-                },
-                y: {
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Sold: ' + context.parsed.x + ' units';
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-@endif
 
 @endif
 
@@ -813,72 +742,41 @@ salesSearchInput.addEventListener('keypress', function(e) {
     }
 });
 
-// Export functionality
-function exportSales(format) {
-    const currentFilters = new URLSearchParams(window.location.search);
-    currentFilters.set('format', format);
-    
-    window.location.href = `{{ route('reports.export.sales') }}?${currentFilters.toString()}`;
-}
-
-// Date range presets
-function setDateRange(preset) {
+// Date Range Preset Functions for Sales
+function setSalesDateRange(rangeType) {
     const today = new Date();
-    const dateFrom = document.getElementById('sales_date_from');
-    const dateTo = document.getElementById('sales_date_to');
-    
-    dateTo.value = today.toISOString().split('T')[0];
-    
-    switch(preset) {
+    const fromInput = document.getElementById('date_from');
+    const toInput = document.getElementById('date_to');
+
+    let fromDate = new Date();
+    let toDate = new Date(today);
+
+    switch(rangeType) {
         case 'today':
-            dateFrom.value = today.toISOString().split('T')[0];
+            fromDate = new Date(today);
             break;
-        case 'yesterday':
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-            dateFrom.value = yesterday.toISOString().split('T')[0];
-            dateTo.value = yesterday.toISOString().split('T')[0];
+        case '7_days':
+            fromDate.setDate(today.getDate() - 7);
             break;
-        case 'last_7_days':
-            const week = new Date(today);
-            week.setDate(week.getDate() - 7);
-            dateFrom.value = week.toISOString().split('T')[0];
+        case '1_month':
+            fromDate.setMonth(today.getMonth() - 1);
             break;
-        case 'last_30_days':
-            const month = new Date(today);
-            month.setDate(month.getDate() - 30);
-            dateFrom.value = month.toISOString().split('T')[0];
+        case '3_months':
+            fromDate.setMonth(today.getMonth() - 3);
             break;
-        case 'six_months':
-            const sixMonths = new Date(today);
-            sixMonths.setMonth(sixMonths.getMonth() - 6);
-            dateFrom.value = sixMonths.toISOString().split('T')[0];
+        case '6_months':
+            fromDate.setMonth(today.getMonth() - 6);
             break;
-        case 'one_year':
-            const oneYear = new Date(today);
-            oneYear.setFullYear(oneYear.getFullYear() - 1);
-            dateFrom.value = oneYear.toISOString().split('T')[0];
+        case '1_year':
+            fromDate.setFullYear(today.getFullYear() - 1);
             break;
     }
+
+    // Format dates as YYYY-MM-DD for date inputs
+    fromInput.value = fromDate.toISOString().split('T')[0];
+    toInput.value = toDate.toISOString().split('T')[0];
 }
 
-// Add preset buttons to the form
-document.addEventListener('DOMContentLoaded', function() {
-    const dateFromInput = document.getElementById('sales_date_from');
-    const presetContainer = document.createElement('div');
-    presetContainer.className = 'mt-2';
-    presetContainer.innerHTML = `
-        <small class="text-muted d-block mb-1">Quick Presets:</small>
-        <div class="btn-group btn-group-sm" role="group">
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('last_7_days')">7d</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('last_30_days')">30d</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('six_months')">6 Months</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('one_year')">1 Year</button>
-        </div>
-    `;
-    
-    dateFromInput.parentNode.appendChild(presetContainer);
-});
 </script>
 @endpush
 @endsection

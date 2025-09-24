@@ -1,21 +1,39 @@
 @extends('reports.layout')
 
 @section('page-content')
-<!-- Advanced Filters Section -->
+<!-- Time Period Filters -->
 <div class="stats-card inventory">
-    <h5><i class="fas fa-filter me-2"></i>Advanced Filters</h5>
+    <h5><i class="fas fa-calendar me-2"></i>Time Period</h5>
     <form method="GET" action="{{ route('reports.inventory') }}" id="inventoryFiltersForm">
+        <!-- Date Range -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="inventory_date_from" class="form-label fw-semibold">From Date</label>
+                <input type="date" class="form-control" id="inventory_date_from" name="date_from" value="{{ $data['filters']['date_from'] }}">
+            </div>
+            <div class="col-md-6">
+                <label for="inventory_date_to" class="form-label fw-semibold">To Date</label>
+                <input type="date" class="form-control" id="inventory_date_to" name="date_to" value="{{ $data['filters']['date_to'] }}">
+            </div>
+        </div>
+
+        <!-- Quick Date Presets -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <label class="form-label fw-semibold">Quick Select:</label>
+                <div class="btn-group flex-wrap" role="group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('today')">Today</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('7_days')">7 Days</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('1_month')">1 Month</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('3_months')">3 Months</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('6_months')">6 Months</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setDateRange('1_year')">1 Year</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Filters -->
         <div class="row g-3">
-            <div class="col-md-3">
-                <label for="date_from" class="form-label fw-semibold">Date From</label>
-                <input type="date" class="form-control" id="date_from" name="date_from" 
-                       value="{{ $data['filters']['date_from'] }}">
-            </div>
-            <div class="col-md-3">
-                <label for="date_to" class="form-label fw-semibold">Date To</label>
-                <input type="date" class="form-control" id="date_to" name="date_to" 
-                       value="{{ $data['filters']['date_to'] }}">
-            </div>
             <div class="col-md-3">
                 <label for="category" class="form-label fw-semibold">Category</label>
                 <select class="form-select" id="category" name="category">
@@ -38,31 +56,18 @@
                     @endforeach
                 </select>
             </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col-12">
-                <div class="d-flex gap-2 flex-wrap">
+            <div class="col-md-6">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-filter me-1"></i>Apply Filters
                     </button>
                     <a href="{{ route('reports.inventory') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-times me-1"></i>Clear All
                     </a>
-                    <div class="ms-auto">
-                        <div class="dropdown">
-                            <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-download me-1"></i>Export
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="exportInventory('csv')">
-                                    <i class="fas fa-file-csv me-2"></i>Export as CSV
-                                </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportInventory('pdf')">
-                                    <i class="fas fa-file-pdf me-2"></i>Export as PDF
-                                </a></li>
-                            </ul>
-                        </div>
-                    </div>
+                    <a href="{{ route('reports.export.inventory', request()->query()) }}" class="btn btn-success">
+                        <i class="fas fa-file-csv me-1"></i>Export CSV
+                    </a>
                 </div>
             </div>
         </div>
@@ -132,6 +137,124 @@
     </div>
 </div>
 
+<!-- Inventory Changes -->
+<div class="stats-card inventory">
+    <h5><i class="fas fa-history me-2"></i>Inventory Changes</h5>
+    <div class="text-muted small mb-3">
+        <i class="fas fa-calendar me-1"></i>Filtering: {{ $data['filters']['date_from'] }} to {{ $data['filters']['date_to'] }}
+    </div>
+
+    <!-- Changes Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="metric-item">
+                <div>
+                    <div class="metric-label">Books Added</div>
+                    <div class="metric-value text-success">{{ $data['changes']['summary']['books_added'] }}</div>
+                </div>
+                <i class="fas fa-plus fa-2x text-success opacity-50"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-item">
+                <div>
+                    <div class="metric-label">Books Deleted</div>
+                    <div class="metric-value text-danger">{{ $data['changes']['summary']['books_deleted'] }}</div>
+                </div>
+                <i class="fas fa-minus fa-2x text-danger opacity-50"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-item">
+                <div>
+                    <div class="metric-label">Stock Changes</div>
+                    <div class="metric-value text-info">{{ $data['changes']['summary']['stock_changes'] }}</div>
+                </div>
+                <i class="fas fa-exchange-alt fa-2x text-info opacity-50"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-item">
+                <div>
+                    <div class="metric-label">Net Stock Change</div>
+                    <div class="metric-value {{ $data['changes']['summary']['total_stock_change'] >= 0 ? 'text-success' : 'text-danger' }}">
+                        {{ $data['changes']['summary']['total_stock_change'] >= 0 ? '+' : '' }}{{ $data['changes']['summary']['total_stock_change'] }}
+                    </div>
+                </div>
+                <i class="fas fa-chart-line fa-2x {{ $data['changes']['summary']['total_stock_change'] >= 0 ? 'text-success' : 'text-danger' }} opacity-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Changes Details -->
+    @if(!$data['changes']['books_added']->isEmpty() || !$data['changes']['stock_changes']->isEmpty())
+    <div class="row">
+        @if(!$data['changes']['books_added']->isEmpty())
+        <div class="col-md-6">
+            <h6><i class="fas fa-plus me-2 text-success"></i>Recently Added Books</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>ISBN</th>
+                            <th>Initial Stock</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($data['changes']['books_added']->take(5) as $book)
+                        <tr>
+                            <td>{{ \Str::limit($book['title'], 30) }}</td>
+                            <td class="font-monospace">{{ $book['isbn'] }}</td>
+                            <td>{{ $book['initial_stock'] }}</td>
+                            <td class="text-muted small">{{ $book['date'] }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        @if(!$data['changes']['stock_changes']->isEmpty())
+        <div class="col-md-6">
+            <h6><i class="fas fa-exchange-alt me-2 text-info"></i>Recent Stock Changes</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Old → New</th>
+                            <th>Change</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($data['changes']['stock_changes']->take(5) as $change)
+                        <tr>
+                            <td>{{ \Str::limit($change['title'], 25) }}</td>
+                            <td>{{ $change['old_stock'] }} → {{ $change['new_stock'] }}</td>
+                            <td>
+                                <span class="badge bg-{{ $change['change_type'] == 'increase' ? 'success' : 'warning' }}">
+                                    {{ $change['change'] >= 0 ? '+' : '' }}{{ $change['change'] }}
+                                </span>
+                            </td>
+                            <td class="text-muted small">{{ $change['date'] }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+    </div>
+    @else
+    <div class="text-center text-muted py-3">
+        <i class="fas fa-info-circle me-2"></i>No inventory changes recorded for the selected period.
+    </div>
+    @endif
+</div>
 
 <!-- Smart Book Search -->
 <div class="stats-card inventory search-card">
@@ -177,40 +300,6 @@
     </div>
 </div>
 
-<!-- Top Value Books -->
-<div class="stats-card inventory">
-    <h5><i class="fas fa-crown me-2"></i>Top Value Books</h5>
-    <div class="row">
-        <div class="col-md-8">
-            <div class="chart-container">
-                <canvas id="topValueBooksChart"></canvas>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="table-container">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Value (RM)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($data['value_analysis']['top_value_books']->take(8) as $index => $book)
-                            <tr>
-                                <td>
-                                    <strong>{{ Str::limit($book->title, 20) }}</strong><br>
-                                    <small class="text-muted">Stock: {{ $book->stock }}</small>
-                                </td>
-                                <td class="fw-bold">{{ number_format($book->price * $book->stock, 2) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Category Analysis -->
 <div class="stats-card inventory">
@@ -266,49 +355,6 @@
     </div>
 </div>
 
-<!-- Dead Stock Analysis -->
-@if($data['dead_stock']['count'] > 0)
-<div class="stats-card inventory">
-    <h5><i class="fas fa-skull me-2"></i>Dead Stock Analysis 
-        <span class="badge bg-warning">{{ $data['dead_stock']['count'] }} items</span>
-    </h5>
-    <div class="alert alert-warning">
-        <strong>Total Dead Stock Value:</strong> RM {{ number_format($data['dead_stock']['total_value'], 2) }}
-        <br><small>Books with no sales in the last 90 days</small>
-    </div>
-    <div class="table-container">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Book Title</th>
-                    <th>Category</th>
-                    <th>Stock</th>
-                    <th>Unit Price (RM)</th>
-                    <th>Total Value (RM)</th>
-                    <th>Recommendation</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($data['dead_stock']['books'] as $book)
-                    <tr>
-                        <td>
-                            <strong>{{ $book->title }}</strong><br>
-                            <small class="text-muted">{{ $book->isbn }}</small>
-                        </td>
-                        <td>{{ $book->category ?: 'Uncategorized' }}</td>
-                        <td>{{ $book->stock }}</td>
-                        <td>{{ number_format($book->price, 2) }}</td>
-                        <td class="fw-bold">{{ number_format($book->price * $book->stock, 2) }}</td>
-                        <td>
-                            <span class="badge bg-secondary">Consider promotion</span>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
-@endif
 
 <!-- Book Detail Modal -->
 <div class="modal fade" id="bookDetailModal" tabindex="-1">
@@ -439,64 +485,6 @@ if (categoryData && categoryData.length > 0) {
     });
 }
 
-// Top Value Books Chart
-const topBooksCtx = document.getElementById('topValueBooksChart').getContext('2d');
-const topBooksData = @json($data['charts']['top_value_books']->values());
-
-if (topBooksData && topBooksData.length > 0) {
-    new Chart(topBooksCtx, {
-        type: 'bar',
-        data: {
-            labels: topBooksData.map(book => {
-                return book.title.length > 25 ? book.title.substring(0, 25) + '...' : book.title;
-            }),
-            datasets: [{
-                label: 'Total Value (RM)',
-                data: topBooksData.map(book => book.price * book.stock),
-                backgroundColor: colors.warning,
-                borderColor: colors.danger,
-                borderWidth: 2,
-                borderRadius: 8,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'RM ' + value.toLocaleString();
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    }
-                },
-                y: {
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Value: RM ' + context.parsed.x.toLocaleString();
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
 
 // Smart Search Functionality
 let searchTimeout;
@@ -722,6 +710,42 @@ searchInput.addEventListener('keypress', function(e) {
         document.getElementById('searchBookBtn').click();
     }
 });
+
+// Date Range Preset Functions
+function setDateRange(rangeType) {
+    const today = new Date();
+    const fromInput = document.getElementById('inventory_date_from');
+    const toInput = document.getElementById('inventory_date_to');
+
+    let fromDate = new Date();
+    let toDate = new Date(today);
+
+    switch(rangeType) {
+        case 'today':
+            fromDate = new Date(today);
+            break;
+        case '7_days':
+            fromDate.setDate(today.getDate() - 7);
+            break;
+        case '1_month':
+            fromDate.setMonth(today.getMonth() - 1);
+            break;
+        case '3_months':
+            fromDate.setMonth(today.getMonth() - 3);
+            break;
+        case '6_months':
+            fromDate.setMonth(today.getMonth() - 6);
+            break;
+        case '1_year':
+            fromDate.setFullYear(today.getFullYear() - 1);
+            break;
+    }
+
+    // Format dates as YYYY-MM-DD for date inputs
+    fromInput.value = fromDate.toISOString().split('T')[0];
+    toInput.value = toDate.toISOString().split('T')[0];
+}
+
 </script>
 @endpush
 @endsection
