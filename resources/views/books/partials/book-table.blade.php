@@ -554,21 +554,31 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
                 $stockLevel = $stockValue >= 10 ? 'high' : ($stockValue >= 1 ? 'medium' : 'low');
                 $stockIcon = $stockValue >= 10 ? 'check' : ($stockValue >= 1 ? 'exclamation' : 'times');
                 @endphp
-                <form action="{{ route('books.updateStock', $book) }}" method="POST" class="inline-stock-form" data-book-id="{{ $book->id }}">
-                    @csrf
-                    @method('PATCH')
-                    <input type="number" name="stock" value="{{ $stockValue }}" min="0" required class="stock-{{ $stockLevel }}">
-                    <button type="submit"><i class="fas fa-save"></i></button>
-                </form>
+
+                @if(auth()->user()->canManageInventory())
+                    <form action="{{ route('books.updateStock', $book) }}" method="POST" class="inline-stock-form" data-book-id="{{ $book->id }}">
+                        @csrf
+                        @method('PATCH')
+                        <input type="number" name="stock" value="{{ $stockValue }}" min="0" required class="stock-{{ $stockLevel }}">
+                        <button type="submit"><i class="fas fa-save"></i></button>
+                    </form>
+                @else
+                    <span class="stock-badge stock-{{ $stockLevel }}">
+                        <i class="fas fa-{{ $stockIcon }}"></i>
+                        {{ $stockValue }}
+                    </span>
+                @endif
             </td>
             <td>
                 <div class="action-buttons">
-                    <button type="button" class="btn btn-warning btn-sm"
-                        data-bs-toggle="modal"
-                        data-bs-target="#editModal{{ $book->id }}"
-                        title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                    @if(auth()->user()->canManageInventory())
+                        <button type="button" class="btn btn-warning btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editModal{{ $book->id }}"
+                            title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    @endif
 
                     <button type="button" class="btn btn-info btn-sm"
                         data-bs-toggle="modal"
@@ -577,15 +587,17 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
                         <i class="fas fa-history"></i>
                     </button>
 
-                    <form action="{{ route('books.destroy', $book) }}" method="POST" style="display: inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm"
-                            onclick="return confirm('Are you sure you want to delete this book?')"
-                            title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
+                    @if(auth()->user()->canManageInventory())
+                        <form action="{{ route('books.destroy', $book) }}" method="POST" style="display: inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Are you sure you want to delete this book?')"
+                                title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </td>
         </tr>
@@ -659,6 +671,7 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
             </div>
         </div>
 
+        @if(auth()->user()->canManageInventory())
         <!-- Edit Book Modal for each book -->
         <div class="modal fade" id="editModal{{ $book->id }}" tabindex="-1">
             <div class="modal-dialog modal-lg">
@@ -726,6 +739,7 @@ $sortDirection = $sortDirection ?? request('direction', 'asc');
                 </div>
             </div>
         </div>
+        @endif
         @empty
         <tr>
             <td colspan="9" class="text-center py-5">

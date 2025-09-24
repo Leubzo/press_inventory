@@ -350,7 +350,7 @@
                                     <strong>{{ $order->order_number }}</strong>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary">{{ $order->platform }}</span>
+                                    <span class="badge bg-primary">{{ $order->platform ?: 'Not Specified' }}</span>
                                 </td>
                                 <td>{{ $order->orderItems->count() }} items</td>
                                 <td class="fw-bold">{{ number_format($order->total_value, 2) }}</td>

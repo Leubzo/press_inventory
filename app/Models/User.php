@@ -79,6 +79,11 @@ class User extends Authenticatable
         return $this->isStorekeeper() || $this->isAdmin();
     }
 
+    public function canManageInventory(): bool
+    {
+        return $this->isStorekeeper() || $this->isAdmin();
+    }
+
     // Relationships
     public function requestedOrders(): HasMany
     {

@@ -429,7 +429,7 @@ class ReportsController extends Controller
             }
             
             return [
-                'platform' => $platform,
+                'platform' => $platform ?: 'Not Specified',
                 'total_orders' => $platformOrders->count(),
                 'total_revenue' => $platformRevenue,
                 'total_quantity' => $platformQuantity,

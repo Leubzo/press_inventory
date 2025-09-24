@@ -30,20 +30,6 @@
 <form id="orderForm" action="{{ route('orders.store') }}" method="POST">
     @csrf
     
-    <!-- Platform Field -->
-    <div class="mb-4">
-        <label for="platform" class="form-label">Platform</label>
-        <select id="platform" name="platform" class="form-control" required>
-            <option value="">Select platform...</option>
-            <option value="Shopee" {{ old('platform') == 'Shopee' ? 'selected' : '' }}>Shopee</option>
-            <option value="Lazada" {{ old('platform') == 'Lazada' ? 'selected' : '' }}>Lazada</option>
-            <option value="TikTok Shop" {{ old('platform') == 'TikTok Shop' ? 'selected' : '' }}>TikTok Shop</option>
-            <option value="Walk-in" {{ old('platform') == 'Walk-in' ? 'selected' : '' }}>Walk-in</option>
-            <option value="Phone Order" {{ old('platform') == 'Phone Order' ? 'selected' : '' }}>Phone Order</option>
-            <option value="Other" {{ old('platform') == 'Other' ? 'selected' : '' }}>Other</option>
-        </select>
-        <small class="text-muted">Select the platform where this order originated</small>
-    </div>
 
     <!-- Add Book Section -->
     <div class="mb-4">
@@ -63,7 +49,7 @@
             </div>
             <div class="col-md-2">
                 <label for="unitPrice" class="form-label">Unit Price (RM)</label>
-                <input type="number" id="unitPrice" class="form-control" step="0.01" min="0" readonly>
+                <input type="number" id="unitPrice" class="form-control" step="0.01" min="0">
             </div>
             <div class="col-md-2">
                 <label class="form-label">&nbsp;</label>
@@ -350,7 +336,6 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     const formData = new FormData();
     formData.append('_token', document.querySelector('input[name="_token"]').value);
     formData.append('purpose', document.getElementById('purpose').value);
-    formData.append('platform', document.getElementById('platform').value);
     
     orderItems.forEach((item, index) => {
         formData.append(`items[${index}][book_id]`, item.book_id);

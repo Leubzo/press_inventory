@@ -408,12 +408,16 @@
                     </h2>
                 </div>
                 <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                    <button type="button" class="btn btn-success btn-custom me-2" data-bs-toggle="modal" data-bs-target="#addBookModal">
-                        <i class="fas fa-plus-circle me-1"></i>Add Book
-                    </button>
-                    <button type="button" class="btn btn-primary btn-custom me-2" data-bs-toggle="modal" data-bs-target="#importModal">
-                        <i class="fas fa-file-import me-1"></i>Import
-                    </button>
+                    @if(auth()->user()->canManageInventory())
+                        <button type="button" class="btn btn-success btn-custom me-2" data-bs-toggle="modal" data-bs-target="#addBookModal">
+                            <i class="fas fa-plus-circle me-1"></i>Add Book
+                        </button>
+                    @else
+                        <div class="alert alert-info mb-0 d-inline-block">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small><strong>View Only:</strong> Contact a storekeeper or administrator to add, edit, or delete books.</small>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -461,32 +465,8 @@
     </div>
 </div>
 
-<!-- Import Modal -->
-<div class="modal fade" id="importModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Import Books from CSV</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('books.import') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="csv_file" class="form-label">Select CSV File</label>
-                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
-                        <small class="text-muted">CSV should contain: ISBN, Title, Authors/Editors, Year, Pages, Price, Category, Stock</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Import</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
+@if(auth()->user()->canManageInventory())
 <!-- Add Book Modal -->
 <div class="modal fade" id="addBookModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -545,6 +525,7 @@
         </div>
     </div>
 </div>
+@endif
 
 @push('scripts')
 <script>
